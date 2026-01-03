@@ -72,6 +72,13 @@ int main()
 		std::cout << obj->GetName() << std::endl;
 
 		std::cout << (*obj).GetGUID() << std::endl;
+	
+		Object::Destroy(obj);
+
+		if (obj)
+			std::cout << "Alived!" << std::endl;
+		else
+			std::cout << "Destroyed!" << std::endl;
 	}
 
 	return 0;

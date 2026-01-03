@@ -501,9 +501,6 @@
     <ClInclude Include="ObjectSerializer.h">
       <Filter>헤더 파일\Core\Object API</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>헤더 파일\Core</Filter>
-    </ClInclude>
     <ClInclude Include="App.h">
       <Filter>헤더 파일\Utility</Filter>
     </ClInclude>
@@ -515,6 +512,9 @@
     </ClInclude>
     <ClInclude Include="Singleton.hpp">
       <Filter>헤더 파일\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>헤더 파일\Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -620,11 +620,11 @@
     <ClCompile Include="ObjectSerializer.cpp">
       <Filter>소스 파일\Core\Object API</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>소스 파일\Core</Filter>
-    </ClCompile>
     <ClCompile Include="App.cpp">
       <Filter>소스 파일\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>소스 파일\Core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

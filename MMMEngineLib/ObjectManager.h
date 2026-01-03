@@ -171,8 +171,8 @@ namespace MMMEngine
             if (objPtr.IsValid())
             {
                 std::lock_guard<std::mutex> lock(m_mutex);
-                m_pendingDestroy.push_back(objPtr.m_handleID);
-                objPtr.m_ptr->MarkDestory();
+                m_pendingDestroy.push_back(objPtr.m_ptrID);
+                objPtr.m_raw->MarkDestory();
             }
         }
 
