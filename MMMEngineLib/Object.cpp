@@ -34,7 +34,7 @@ RTTR_REGISTRATION
 MMMEngine::Object::Object() : m_instanceID(s_nextInstanceID++)
 {
 #ifdef _DEBUG
-	if (!ObjectManager::Get()->IsCreatingObject())
+	if (!ObjectManager::Get().IsCreatingObject())
 	{
 		assert(false && "Object는 ObjectManager/CreateInstance로만 생성할 수 있습니다.");
 		std::abort();
@@ -47,7 +47,7 @@ MMMEngine::Object::Object() : m_instanceID(s_nextInstanceID++)
 MMMEngine::Object::~Object()
 {
 #ifdef _DEBUG
-	assert(ObjectManager::Get()->IsDestroyingObject() && "Object는 ObjectManager/Destroy로만 파괴할 수 있습니다.");
+	assert(ObjectManager::Get().IsDestroyingObject() && "Object는 ObjectManager/Destroy로만 파괴할 수 있습니다.");
 #endif
 }
 

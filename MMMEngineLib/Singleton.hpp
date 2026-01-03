@@ -7,10 +7,10 @@ public:
     Singleton(const Singleton&) = delete;
     Singleton& operator=(const Singleton&) = delete;
 
-    static T* Get()
+    static T& Get()
     {
         static T instance;
-        return &instance;
+        return instance;
     }
 
 protected:

@@ -24,7 +24,7 @@ namespace MMMEngine
         void ProcessPendingDestroy()
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            DestroyScope scope(this);
+            DestroyScope scope;
 
             for (uint32_t handleID : m_pendingDestroy)
             {
@@ -87,34 +87,29 @@ namespace MMMEngine
         class CreationScope
         {
         public:
-            explicit CreationScope(ObjectManager* mgr)
-                : m_mgr(mgr)
+            CreationScope()
             {
-                m_mgr->m_isCreatingObject = true;
+                ObjectManager::m_isCreatingObject = true;
             }
 
             ~CreationScope()
             {
-                m_mgr->m_isCreatingObject = false;
+                ObjectManager::m_isCreatingObject = false;
             }
-
-        private:
-            ObjectManager* m_mgr;
         };
 
         class DestroyScope
         {
         public:
-            DestroyScope(ObjectManager* mgr) : m_mgr(mgr)
+            DestroyScope()
             {
-                m_mgr->m_isDestroyingObject = true;
+                ObjectManager::m_isDestroyingObject = true;
             }
+
             ~DestroyScope()
             {
-                m_mgr->m_isDestroyingObject = false;
+                ObjectManager::m_isDestroyingObject = false;
             }
-        private:
-            ObjectManager* m_mgr;
         };
 
         // === 유효성 검증 ===
@@ -143,7 +138,7 @@ namespace MMMEngine
 
             std::lock_guard<std::mutex> lock(m_mutex);
 
-            CreationScope scope(this);
+            CreationScope scope;
 
             T* newObj = new T(std::forward<Args>(args)...);
             uint32_t handleID;
@@ -184,7 +179,7 @@ namespace MMMEngine
         ObjectManager() = default;
         ~ObjectManager()
         {
-            DestroyScope scope(this);
+            DestroyScope scope;
             // 모든 객체 정리
             for (Object* obj : m_objects)
             {

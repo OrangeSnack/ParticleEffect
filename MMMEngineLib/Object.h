@@ -155,7 +155,7 @@ namespace MMMEngine
         virtual bool IsSameObject(const ObjectPtrBase& other) const override
         {
             return IsValid() && 
-                ObjectManager::Get()->IsValidHandle(other.GetHandleID(),other.GetGeneration(),other.GetRaw()) &&
+                ObjectManager::Get().IsValidHandle(other.GetHandleID(),other.GetGeneration(),other.GetRaw()) &&
                 m_handleID == other.GetHandleID() &&
                 m_handleGeneration == other.GetGeneration();
         }
@@ -164,7 +164,7 @@ namespace MMMEngine
 
         virtual bool IsValid() const override
         {
-            return ObjectManager::Get()->IsValidHandle(m_handleID, m_handleGeneration, m_ptr);
+            return ObjectManager::Get().IsValidHandle(m_handleID, m_handleGeneration, m_ptr);
         }
 
         virtual uint32_t GetHandleID() const override { return m_handleID; }
