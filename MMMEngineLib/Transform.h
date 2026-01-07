@@ -38,6 +38,8 @@ namespace MMMEngine
 	public:
 		virtual ~Transform();
 
+		Event<Transform, void(void)> onMatrixUpdate{ this };
+
 		const Matrix& GetLocalMatrix() const;
 		const Matrix& GetWorldMatrix() const;
 
@@ -50,8 +52,6 @@ namespace MMMEngine
 		const Quaternion GetWorldRotation() const;
 		const Vector3 GetWorldEulerRotation() const; // return degree (0 ~ 360)
 		const Vector3 GetWorldScale() const;
-
-		ObjectPtr<Transform> GetChild(size_t index);
 
 		void SetWorldPosition(Vector3 pos);
 		inline void SetWorldPosition(float x, float y, float z) { SetWorldPosition({ x,y,z }); }
@@ -71,10 +71,20 @@ namespace MMMEngine
 		void SetLocalRotation(Quaternion rot);
 		inline void SetLocalRotation(float x, float y, float z, float w) { SetLocalRotation({ x,y,z,w }); }
 
-		void SetParent(ObjectPtr<Transform> parent, bool worldPositionStays = true);
-		
-		inline ObjectPtr<Transform> GetParent() const { return m_parent; }
+		void SetLocalScale(const Vector3& scale);
+		inline void SetLocalScale(float x, float y, float z) { SetLocalScale({ x,y,z }); }
 
-		Event<Transform, void(void)> onMatrixUpdate{ this };
+		ObjectPtr<Transform> GetParent() const;
+		ObjectPtr<Transform> GetChild(size_t index) const;
+
+		void SetParent(ObjectPtr<Transform> parent, bool worldPositionStays = true);
+
+		// TODO : 나중에 Sibling 관련 함수를 모두 제작해야 함
+		//ObjectPtr<Transform> Find(const std::wstring& name);
+		//ObjectPtr<Transform> GetRoot();
+		//void DetachChildren();
+
+		//virtual void SetSiblingIndex(size_t idx);
+		//size_t GetSiblingIndex() const;
 	};
 }

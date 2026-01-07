@@ -151,6 +151,13 @@ namespace MMMEngine
             return *this;
         }
 
+        /// <summary>
+        /// 다이나믹 캐스트를 이용하여 빠르게 타입변환을 유도합니다. 
+        /// 내부에서 주소유효성 검사 없이 타입변환된 ObjectPtr을 반환합니다.
+        /// 타입변환이 유효하지 않은경우 내부 포인터가 nullptr이 됩니다.
+        /// </summary>
+        /// <typeparam name="U"></typeparam>
+        /// <returns></returns>
         template<typename U>
         ObjectPtr<U> Cast() const
         {
@@ -162,6 +169,13 @@ namespace MMMEngine
             return ObjectPtr<U>();
         }
 
+        /// <summary>
+        /// 타입 변환을 시도한 후 성공 시 타입변환된 ObjectPtr을 반환합니다.
+        /// As<U>()는 완전유효한 타입변환을 목표로 두기 떄문에
+        /// 변환에 실패한 경우 컴파일타임에러가 일어납니다.
+        /// </summary>
+        /// <typeparam name="U"></typeparam>
+        /// <returns></returns>
         template<typename U>
         ObjectPtr<U> As() const
         {

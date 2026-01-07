@@ -115,6 +115,12 @@
     <Filter Include="DXTK\Inc">
       <UniqueIdentifier>{d2942064-b39a-40f4-86b6-3aa64d93dc96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Core\Resource API">
+      <UniqueIdentifier>{9429d884-7bed-4e3a-8a66-6736b614e7c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\InputSystem API">
+      <UniqueIdentifier>{0541079b-0c19-4d7d-9149-a84c89ebef56}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">

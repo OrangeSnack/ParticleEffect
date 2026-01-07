@@ -168,7 +168,12 @@ const Vector3 MMMEngine::Transform::GetWorldScale() const
 	return m_localScale;
 }
 
-MMMEngine::ObjectPtr<MMMEngine::Transform> MMMEngine::Transform::GetChild(size_t index)
+MMMEngine::ObjectPtr<MMMEngine::Transform> MMMEngine::Transform::GetParent() const
+{
+	return m_parent;
+}
+
+MMMEngine::ObjectPtr<MMMEngine::Transform> MMMEngine::Transform::GetChild(size_t index) const
 {
 	//out of index
 	if (index >= m_childs.size())
@@ -269,6 +274,13 @@ void MMMEngine::Transform::SetLocalPosition(Vector3 pos)
 void MMMEngine::Transform::SetLocalRotation(Quaternion rot)
 {
 	m_localRotation = rot;
+	MarkDirty();
+	onMatrixUpdate.Invoke(this);
+}
+
+void MMMEngine::Transform::SetLocalScale(const Vector3& scale)
+{
+	m_localScale = scale;
 	MarkDirty();
 	onMatrixUpdate.Invoke(this);
 }
