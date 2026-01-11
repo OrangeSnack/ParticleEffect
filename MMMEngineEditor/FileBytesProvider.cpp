@@ -2,7 +2,7 @@
 
 bool MMMEngine::Editor::FileBytesProvider::ReadAll(const MMMEngine::AssetEntry& entry, std::vector<uint8_t>& outBytes)
 {
-    if (entry.source != MMMEngine::AssetEntry::Source::File) return false;
+    if (entry.cacheType != MMMEngine::AssetEntry::CacheType::File) return false;
 
     std::ifstream f(entry.filePath, std::ios::binary);
     if (!f) return false;

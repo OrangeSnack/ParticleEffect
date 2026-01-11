@@ -10,8 +10,8 @@ namespace MMMEngine
     {
         Utility::MUID muid{};
 
-        enum class Source : uint8_t { File = 0, Pak = 1 };
-        Source source = Source::File;
+        enum class CacheType : uint8_t { File = 0, Pak = 1 };
+        CacheType cacheType = CacheType::File;
 
         // File
         std::wstring filePath; // artifact 실제 경로(에디터)

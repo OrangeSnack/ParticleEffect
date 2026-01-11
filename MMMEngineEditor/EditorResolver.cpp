@@ -8,7 +8,7 @@ bool MMMEngine::Editor::EditorResolver::Resolve(std::string_view sourcePath, MMM
     if (!m_db->TryResolve(sourcePath, meta)) return false;
 
     out.muid = meta.muid;
-    out.source = MMMEngine::AssetEntry::Source::File;
+    out.cacheType = MMMEngine::AssetEntry::CacheType::File;
     out.filePath = meta.artifactPath;
     out.offset = 0;
     out.size = 0;
@@ -25,7 +25,7 @@ bool MMMEngine::Editor::EditorResolver::Resolve(const Utility::MUID& muid, Asset
         return false;
 
     out.muid = muid;
-    out.source = MMMEngine::AssetEntry::Source::File;
+    out.cacheType = MMMEngine::AssetEntry::CacheType::File;
     out.filePath = meta.artifactPath;
     out.offset = 0;
     out.size = 0;

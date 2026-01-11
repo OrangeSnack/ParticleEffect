@@ -11,7 +11,7 @@ bool MMMEngine::Player::PlayerResolver::Resolve(std::string_view sourcePath, MMM
     if (!m_index->TryGetSpan(muid, sp)) return false;
 
     out.muid = muid;
-    out.source = MMMEngine::AssetEntry::Source::Pak;
+    out.cacheType = MMMEngine::AssetEntry::CacheType::Pak;
     out.filePath.clear();
     out.offset = sp.offset;
     out.size = sp.size;
@@ -26,7 +26,7 @@ bool MMMEngine::Player::PlayerResolver::Resolve(const Utility::MUID& muid, MMMEn
     if (!m_index->TryGetSpan(muid, sp)) return false;
 
     out.muid = muid;
-    out.source = MMMEngine::AssetEntry::Source::Pak;
+    out.cacheType = MMMEngine::AssetEntry::CacheType::Pak;
     out.filePath.clear();
     out.offset = sp.offset;
     out.size = sp.size;
