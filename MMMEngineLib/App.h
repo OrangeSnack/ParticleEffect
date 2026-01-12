@@ -12,12 +12,21 @@ namespace MMMEngine::Utility
 	class App
 	{
 	public:
+		enum class DisplayMode
+		{
+			Windowed,           // 일반 창모드
+			BorderlessWindowed, // 경계없는 창모드
+			Fullscreen         // 전체화면 (독점)
+		};
+
 		struct WindowInfo
 		{
 			std::wstring title;
 			LONG width;
 			LONG height;
 			DWORD style;
+			LONG fullscreenWidth;   // 전체화면 해상도
+			LONG fullscreenHeight;
 		};
 
 		struct WindowedRestore
@@ -39,6 +48,9 @@ namespace MMMEngine::Utility
 		void Quit();
 
 		void SetWindowTitle(const std::wstring& title);
+		void SetDisplayMode(DisplayMode mode);
+		DisplayMode GetDisplayMode() const;
+		void ToggleFullscreen(); // Windowed <-> Fullscreen 토글
 
 		Event<App, void(void)> OnInitialize{ this };
 		Event<App, void(void)> OnRelease{ this };
@@ -57,13 +69,19 @@ namespace MMMEngine::Utility
 	private:
 		bool m_isRunning;
 		WindowInfo m_windowInfo;
-		
+		WindowedRestore m_windowedRestore;
+		DisplayMode m_currentDisplayMode;
 		HINSTANCE m_hInstance;
 		HWND m_hWnd;
 
 		bool m_windowSizeDirty;
 
 		bool CreateMainWindow();
+		void SetWindowed();
+		void SetBorderlessWindowed();
+		void SetFullscreen();
+		void SaveWindowedState();
+		void RestoreWindowedState();
 		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 }

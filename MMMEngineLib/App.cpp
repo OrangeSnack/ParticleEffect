@@ -1,35 +1,13 @@
 #include "App.h"
 #include <wrl/client.h>
 
-static RECT GetMonitorRectForWindow(HWND hwnd)
-{
-	HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-	MONITORINFO mi{ sizeof(mi) };
-	GetMonitorInfo(mon, &mi);
-	return mi.rcMonitor;
-}
-
-static bool IsBorderless(HWND hwnd)
-{
-	LONG_PTR style = GetWindowLongPtr(hwnd, GWL_STYLE);
-	// 일반적으로 borderless는 WS_POPUP 기반
-	if (style & WS_CAPTION) return false;
-	if (style & WS_THICKFRAME) return false;
-
-	RECT wr{}, mr{};
-	GetWindowRect(hwnd, &wr);
-	mr = GetMonitorRectForWindow(hwnd);
-
-	return (wr.left == mr.left && wr.top == mr.top &&
-		wr.right == mr.right && wr.bottom == mr.bottom);
-}
-
 MMMEngine::Utility::App::App()
 	: m_hInstance(GetModuleHandle(NULL))
 	, m_hWnd(NULL)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
-	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW })
+	, m_currentDisplayMode(DisplayMode::Windowed)
+	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW, 1600, 900 })
 {
 }
 
@@ -38,7 +16,8 @@ MMMEngine::Utility::App::App(HINSTANCE hInstance)
 	, m_hWnd(NULL)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
-	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW })
+	, m_currentDisplayMode(DisplayMode::Windowed)
+	, m_windowInfo({ L"MMM Engine Application",1600,900,WS_OVERLAPPEDWINDOW, 1600, 900 })
 {
 }
 
@@ -47,6 +26,7 @@ MMMEngine::Utility::App::App(LPCWSTR title, LONG width, LONG height)
 	, m_hWnd(NULL)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
+	, m_currentDisplayMode(DisplayMode::Windowed)
 	, m_windowInfo({ title,width,height,WS_OVERLAPPEDWINDOW })
 {
 }
@@ -56,6 +36,7 @@ MMMEngine::Utility::App::App(HINSTANCE hInstance, LPCWSTR title, LONG width, LON
 	, m_hWnd(NULL)
 	, m_isRunning(false)
 	, m_windowSizeDirty(false)
+	, m_currentDisplayMode(DisplayMode::Windowed)
 	, m_windowInfo({ title,width,height,WS_OVERLAPPEDWINDOW })
 {
 }
@@ -235,6 +216,157 @@ void MMMEngine::Utility::App::SetWindowTitle(const std::wstring& title)
 	{
 		SetWindowTextW(m_hWnd, m_windowInfo.title.c_str());
 	}
+}
+
+void MMMEngine::Utility::App::SetDisplayMode(DisplayMode mode)
+{
+	if (m_currentDisplayMode == mode)
+		return;
+
+	m_currentDisplayMode = mode;
+
+	switch (mode)
+	{
+	case DisplayMode::Windowed:
+		SetWindowed();
+		break;
+	case DisplayMode::BorderlessWindowed:
+		SetBorderlessWindowed();
+		break;
+	case DisplayMode::Fullscreen:
+		SetFullscreen();
+		break;
+	}
+}
+
+MMMEngine::Utility::App::DisplayMode MMMEngine::Utility::App::GetDisplayMode() const
+{
+	return m_currentDisplayMode;
+}
+
+void MMMEngine::Utility::App::ToggleFullscreen()
+{
+	if (m_currentDisplayMode == DisplayMode::Fullscreen)
+	{
+		SetDisplayMode(DisplayMode::Windowed);
+	}
+	else
+	{
+		SetDisplayMode(DisplayMode::Fullscreen);
+	}
+}
+
+void MMMEngine::Utility::App::SaveWindowedState()
+{
+	m_windowedRestore.style = GetWindowLong(m_hWnd, GWL_STYLE);
+	m_windowedRestore.exStyle = GetWindowLong(m_hWnd, GWL_EXSTYLE);
+	GetWindowRect(m_hWnd, &m_windowedRestore.rect);
+	m_windowedRestore.valid = true;
+}
+
+void MMMEngine::Utility::App::RestoreWindowedState()
+{
+	if (!m_windowedRestore.valid)
+		return;
+
+	SetWindowLong(m_hWnd, GWL_STYLE, m_windowedRestore.style);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, m_windowedRestore.exStyle);
+
+	SetWindowPos(m_hWnd, HWND_NOTOPMOST,
+		m_windowedRestore.rect.left,
+		m_windowedRestore.rect.top,
+		m_windowedRestore.rect.right - m_windowedRestore.rect.left,
+		m_windowedRestore.rect.bottom - m_windowedRestore.rect.top,
+		SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+}
+
+void MMMEngine::Utility::App::SetWindowed()
+{
+	if (m_currentDisplayMode != DisplayMode::Windowed)
+	{
+		// 이전 상태 복원
+		RestoreWindowedState();
+	}
+	else
+	{
+		// 일반 창 스타일 설정
+		DWORD style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+		SetWindowLong(m_hWnd, GWL_STYLE, style);
+
+		RECT rect = { 0, 0, m_windowInfo.width, m_windowInfo.height };
+		AdjustWindowRect(&rect, style, FALSE);
+
+		int centerX = (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2;
+		int centerY = (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2;
+
+		SetWindowPos(m_hWnd, HWND_NOTOPMOST,
+			centerX, centerY,
+			rect.right - rect.left,
+			rect.bottom - rect.top,
+			SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+	}
+}
+
+void MMMEngine::Utility::App::SetBorderlessWindowed()
+{
+	if (m_currentDisplayMode == DisplayMode::Windowed)
+	{
+		SaveWindowedState();
+	}
+
+	DWORD style = WS_POPUP | WS_VISIBLE;
+	SetWindowLong(m_hWnd, GWL_STYLE, style);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
+
+	HMONITOR hMonitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONEAREST);
+	MONITORINFO monitorInfo = { sizeof(MONITORINFO) };
+	GetMonitorInfo(hMonitor, &monitorInfo);
+
+	// 사용자 지정 해상도 사용 (중앙 정렬)
+	int monitorWidth = monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left;
+	int monitorHeight = monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top;
+	int x = monitorInfo.rcMonitor.left + (monitorWidth - m_windowInfo.fullscreenWidth) / 2;
+	int y = monitorInfo.rcMonitor.top + (monitorHeight - m_windowInfo.fullscreenHeight) / 2;
+
+	SetWindowPos(m_hWnd, HWND_TOP, x, y,
+		m_windowInfo.fullscreenWidth,
+		m_windowInfo.fullscreenHeight,
+		SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+	m_windowSizeDirty = true;
+}
+
+void MMMEngine::Utility::App::SetFullscreen()
+{
+	// 현재 창모드라면 상태 저장
+	if (m_currentDisplayMode == DisplayMode::Windowed)
+	{
+		SaveWindowedState();
+	}
+
+	// 독점 전체화면 스타일
+	DWORD style = WS_POPUP | WS_VISIBLE;
+	SetWindowLong(m_hWnd, GWL_STYLE, style);
+	SetWindowLong(m_hWnd, GWL_EXSTYLE, WS_EX_APPWINDOW | WS_EX_TOPMOST);
+
+	// 주 모니터 전체 화면
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	SetWindowPos(m_hWnd, HWND_TOPMOST,
+		0, 0, screenWidth, screenHeight,
+		SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+
+	// 디스플레이 설정 변경 (선택사항)
+	/*
+	DEVMODE dmScreenSettings = {};
+	dmScreenSettings.dmSize = sizeof(dmScreenSettings);
+	dmScreenSettings.dmPelsWidth = screenWidth;
+	dmScreenSettings.dmPelsHeight = screenHeight;
+	dmScreenSettings.dmBitsPerPel = 32;
+	dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
+	ChangeDisplaySettings(&dmScreenSettings, CDS_FULLSCREEN);
+	*/
 }
 
 
