@@ -110,9 +110,6 @@ bool MMMEngine::ObjectManager::IsValidPtr(uint32_t ptrID, uint32_t generation, c
     if (m_objectPtrInfos[ptrID].ptrGenerations != generation)
         return false;
 
-    //if (stored->IsDestroyed())
-    //    return false;
-
     return true;
 }
 

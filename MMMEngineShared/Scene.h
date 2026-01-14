@@ -4,19 +4,30 @@
 #include "MUID.h"
 #include "rttr/type"
 #include "rttr/registration_friend.h"
+#include "json/json.hpp"
 
 namespace MMMEngine
 {
+	using SnapShot = nlohmann::json;
+
 	class GameObject;
 	class MMMENGINE_API Scene final
 	{
 	private:
+		friend class SceneManager;
 		RTTR_ENABLE()
 		RTTR_REGISTRATION_FRIEND
 		Utility::MUID m_muid;
 		std::vector<ObjPtr<GameObject>> m_gameObjects;
+		SnapShot m_snapshot;
 		void SetMUID(const Utility::MUID& muid);
+		void SetSnapShot(SnapShot&& snapshot) noexcept;  //호출시 반드시 인자에 std::move()로 옮길것, 예) loadedScene.SetSnapShot(std::move(snapshot));
+		const SnapShot& GetSnapShot() const;
+		void Clear();
 	public:
-		const Utility::MUID& GetMUID();
+		~Scene();
+		void RegisterGameObject(ObjPtr<GameObject> go);
+		void UnRegisterGameObject(ObjPtr<GameObject> go);
+		const Utility::MUID& GetMUID() const;
 	};
 }

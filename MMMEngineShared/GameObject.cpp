@@ -4,6 +4,7 @@
 #include "Component.h"
 #include "Transform.h"
 #include "ObjectManager.h"
+#include "SceneManager.h"
 #include <cmath>
 
 RTTR_REGISTRATION
@@ -24,7 +25,15 @@ RTTR_REGISTRATION
    	    .constructor<>(
    		    []() {
    			    return Object::NewObject<GameObject>();
-   		    });
+   		    })
+		.constructor(
+			[](SceneRef scene) {
+				return Object::NewObject<GameObject>(scene);
+			})
+		.constructor(
+			[](SceneRef scene, const std::string& name) {
+				return Object::NewObject<GameObject>(scene, name);
+			});
 }
 
 void MMMEngine::GameObject::RegisterComponent(const ObjPtr<Component>& comp)
@@ -74,34 +83,58 @@ void MMMEngine::GameObject::UpdateActiveInHierarchy()
 	}
 }
 
-MMMEngine::GameObject::GameObject()
+MMMEngine::GameObject::GameObject() 
 {
 }
 
 
-MMMEngine::GameObject::GameObject(std::string name)
+MMMEngine::GameObject::GameObject(std::string name) 
 {
+	SetName(name);
+}
+
+MMMEngine::GameObject::GameObject(SceneRef scene)
+{
+	SetScene(scene);
+}
+
+MMMEngine::GameObject::GameObject(SceneRef scene, std::string name)
+{
+	SetScene(scene);
 	SetName(name);
 }
 
 void MMMEngine::GameObject::Construct()
 {
-	auto s = SelfPtr(this);
+	auto& sceneManager = SceneManager::Get();
+	if (!sceneManager.GetSceneRaw(GetScene()))
+	{
+		SetScene(sceneManager.GetCurrentScene());
+		sceneManager.GetSceneRaw(GetScene())->RegisterGameObject(SelfPtr(this));
+	}
 	Initialize();
 }
 
 void MMMEngine::GameObject::Dispose()
 {
-	ObjectManager::Get().Destroy(m_transform);
+	if (auto scene = SceneManager::Get().GetSceneRaw(GetScene()))
+	{
+		scene->UnRegisterGameObject(SelfPtr(this));
+	}
+
+	ObjPtr<Component> t = m_transform;
+	t->SetGameObject(nullptr);
 	UnRegisterComponent(m_transform);
+	ObjectManager::Get().Destroy(m_transform);
 	m_transform = nullptr;
-	std::vector<ObjPtr<Component>> compsCopy = m_components;
-	for (const auto& comp : compsCopy)
+	for (const auto& comp : m_components)
 		if (comp.IsValid() && !comp->IsDestroyed())
 		{
+			comp->SetGameObject(nullptr);
 			Destroy(comp);
-			UnRegisterComponent(comp);
 		}
+
+	m_components.clear();
 }
 
 void MMMEngine::GameObject::SetActive(bool active)

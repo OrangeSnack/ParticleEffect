@@ -15,6 +15,7 @@
 #include "ResourceManager.h"
 #include "BehaviourManager.h"
 #include "ObjectManager.h"
+#include "SceneManager.h"
 
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
@@ -26,6 +27,7 @@ void Initialize()
 	InputManager::Get().StartUp(GlobalRegistry::g_pApp->GetWindowHandle());
 	GlobalRegistry::g_pApp->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
 
+	SceneManager::Get().StartUp();
 	BehaviourManager::Get().StartUp();
 
 	g_pPlayer = Object::NewObject<GameObject>("Player");
@@ -66,6 +68,9 @@ void Update()
 
 void Release()
 {
+	SceneManager::Get().ShutDown();
+	ObjectManager::Get().UpdateInternalTimer(10000);
+	ObjectManager::Get().ProcessPendingDestroy();
 	BehaviourManager::Get().ShutDown();
 	GlobalRegistry::g_pApp = nullptr;
 }

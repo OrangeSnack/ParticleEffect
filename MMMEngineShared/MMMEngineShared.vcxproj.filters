@@ -711,6 +711,9 @@
     <ClInclude Include="MissingScriptBehaviour.h">
       <Filter>헤더 파일\Core\Behaviour API</Filter>
     </ClInclude>
+    <ClInclude Include="SceneRef.h">
+      <Filter>헤더 파일\Core\Scene API</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rttr\constructor.cpp">

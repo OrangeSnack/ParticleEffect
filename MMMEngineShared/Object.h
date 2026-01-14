@@ -39,10 +39,10 @@ namespace MMMEngine
         virtual ~Object();
 
         template<typename T>
-        ObjPtr<T> SelfPtr(T* self);
+        ObjPtr<T> SelfPtr(T* self);     // 자신의 코드에서 자신의 ObjPt을 찾기위한 방법 -> this와 같음, 유효한 범위 : 생성자 호출 이후, 소멸자 호출 이전
 
-        virtual void Construct() {};
-        virtual void Dispose() {};
+        virtual void Construct() {};    // SelfPtr(this)를 사용하기 위한 생성자 호출 이후 이벤트 -> 다른 대상에 대한 참조 연결에 사용
+        virtual void Dispose() {};      // SelfPtr(this)를 사용하기 위한 소멸자 호출 이전 이벤트 -> 다른 대상에 대한 참조 끊기에 사용
 	public:
 		Object(const Object&) = delete;
 		Object& operator=(const Object&) = delete;

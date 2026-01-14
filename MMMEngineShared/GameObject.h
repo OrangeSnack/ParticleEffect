@@ -3,6 +3,7 @@
 #include "rttr/type"
 #include <vector>
 #include "Export.h"
+#include "SceneRef.h"
 
 namespace MMMEngine
 {
@@ -16,7 +17,7 @@ namespace MMMEngine
 		friend class Component;
 		friend class Transform;
 
-		//SceneRef m_scene;
+		SceneRef m_scene = { static_cast<size_t>(-1), false };
 
 		ObjPtr<Transform> m_transform;
 		std::vector<ObjPtr<Component>> m_components;
@@ -32,9 +33,13 @@ namespace MMMEngine
 		void UpdateActiveInHierarchy();
 		void Initialize();
 		std::vector<ObjPtr<Component>> GetComponentsCopy() { return m_components; }
+		const SceneRef& GetScene() const { return m_scene; }
+		void SetScene(SceneRef scene) { m_scene = scene; }
 	protected:
 		GameObject();
 		GameObject(std::string name);
+		GameObject(SceneRef scene);
+		GameObject(SceneRef scene, std::string name);
 		virtual void Construct() override;
 		virtual void Dispose() final override;
 	public:
@@ -47,9 +52,8 @@ namespace MMMEngine
 		bool IsActiveSelf() const { return m_active; }
 		bool IsActiveInHierarchy() const { return m_activeInHierarchy; }
 
-		const std::string&	GetTag()	const { return m_tag; }
-		const uint32_t&		GetLayer()	const { return m_layer; }
-		//const SceneRef		GetScene()	const { return m_scene; }
+		const std::string&	GetTag()		const { return m_tag; }
+		const uint32_t&		GetLayer()		const { return m_layer; }
 
 		template <typename T>
 		ObjPtr<T> AddComponent()
