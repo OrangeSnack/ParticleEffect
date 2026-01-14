@@ -13,8 +13,8 @@ namespace MMMEngine
 		std::chrono::steady_clock::time_point m_initTime;
 		std::chrono::steady_clock::time_point m_prevTime;
 		std::chrono::steady_clock::time_point m_currentTime;
-		std::chrono::steady_clock::duration m_deltaDuration;
-		std::chrono::steady_clock::duration m_totalDuration;
+		std::chrono::steady_clock::duration m_deltaDuration = {};
+		std::chrono::steady_clock::duration m_totalDuration = {};
 
 		float m_deltaTime = 0;
 		float m_fixedDeltaTime = 0.03125f;
@@ -43,22 +43,24 @@ namespace MMMEngine
 				step(m_fixedDeltaTime);
 			}
 		}
-		
-		const float GetDeltaTime() const { return m_deltaTime; }
-		const float GetFixedDeltaTime() const { return m_fixedDeltaTime; }
-		const float GetTotalTime() const { return m_totalTime; }
-		const float GetFixedTime() const { return m_fixedTime; }
-		const float GetUnscaledTime() const { return m_unscaledTotalTime; }
-		const float GetUnscaledDeltaTime() const { return m_unscaledDeltaTime; }
-		const float GetTimeScale() const { return m_timeScale; }
-		const float GetMaximumAllowedTimestep() const { return m_maximumAllowedTimestep; }
-		const uint32_t GetFrameCount() const { return m_frameCount; }
-	
-		void SetFixedDeltaTime(float fixedDelta) { m_fixedDeltaTime = fixedDelta; }
-		void SetMaximumAllowedTimestep(float allowedTimestep) { m_maximumAllowedTimestep = allowedTimestep; }
 
-		void SetDefaultFixedDeltaTime() { m_fixedDeltaTime = 0.03125f; }
-		void SetDefaultMaximumAllowedTimestep() { m_maximumAllowedTimestep = 0.2f; }
+		const float GetDeltaTime() const;
+		const float GetFixedDeltaTime() const;
+		const float GetTotalTime() const;
+		const float GetFixedTime() const;
+		const float GetUnscaledTime() const;
+		const float GetUnscaledDeltaTime() const;
+		const float GetTimeScale() const;
+		const float GetMaximumAllowedTimestep() const;
+		const uint32_t GetFrameCount() const;
+	
+		void SetFixedDeltaTime(float fixedDelta);
+		void SetMaximumAllowedTimestep(float allowedTimestep);
+
+		void SetDefaultFixedDeltaTime();
+		void SetDefaultMaximumAllowedTimestep();
+
+		void ResetFrameCount();
 	};
 }
 #pragma warning(pop)

@@ -6,8 +6,6 @@
 
 namespace MMMEngine
 {
-	class Transform;
-	class Component;
 	class MMMENGINE_API GameObject : public Object
 	{
 	private:
@@ -16,6 +14,7 @@ namespace MMMEngine
 		friend class ObjectManager;
 		friend class Scene;
 		friend class Component;
+		friend class Transform;
 
 		//SceneRef m_scene;
 

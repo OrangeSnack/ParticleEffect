@@ -1,6 +1,7 @@
 #include "Transform.h"
 #include "StringHelper.h"
 #include "rttr/registration"
+#include "GameObject.h"
 
 using namespace DirectX::SimpleMath;
 using namespace MMMEngine::Utility;
@@ -10,9 +11,9 @@ RTTR_REGISTRATION
 	using namespace rttr;
 	using namespace MMMEngine;
 
-	using Vec3Fn = void (Transform::*)(const Vector3&);
-	using QuatFn = void (Transform::*)(const Quaternion&);
-	Vec3Fn setpos = &Transform::SetLocalPosition;
+	using Vec3Fn = void (Transform::*)(const Vector3&);		//오버로드 때문에 구현 = (float,float,float) , (Vector3) 중 누굴 호출할지 모호함 -> RTTR에러!
+	using QuatFn = void (Transform::*)(const Quaternion&);  //마찬가지로 오버로드 때문에 구현
+	Vec3Fn setpos = &Transform::SetLocalPosition;		
 	QuatFn setrot = &Transform::SetLocalRotation;
 	Vec3Fn setscale = &Transform::SetLocalScale;
 
@@ -364,7 +365,8 @@ void MMMEngine::Transform::SetParent(ObjPtr<Transform> parent, bool worldPositio
 	}
 
 	MarkDirty();
-	onMatrixUpdate.Invoke(this);  //GetGameObject()->UpdateActiveInHierarchy(); // 부모가 바뀌었으므로 Hierarchy 활성화 상태 업데이트
+	onMatrixUpdate.Invoke(this);  
+	GetGameObject()->UpdateActiveInHierarchy(); // 부모가 바뀌었으므로 Hierarchy 활성화 상태 업데이트
 }
 
 MMMEngine::ObjPtr<MMMEngine::Transform> MMMEngine::Transform::Find(const std::string& path)

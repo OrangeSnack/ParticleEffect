@@ -77,3 +77,21 @@ std::string MMMEngine::Utility::StringHelper::WStringToString(const std::wstring
 
     return strTo;
 }
+
+std::wstring MMMEngine::Utility::StringHelper::ExtractFileFormat(const std::wstring& filepath)
+{
+    size_t dotPos = filepath.find_last_of(L".");
+
+    if (dotPos == std::wstring::npos)
+    {
+        return L"";
+    }
+
+    size_t lastSeparator = filepath.find_last_of(L"\\/");
+    if (lastSeparator != std::wstring::npos && lastSeparator > dotPos)
+    {
+        return L"";
+    }
+
+    return filepath.substr(dotPos + 1);
+}

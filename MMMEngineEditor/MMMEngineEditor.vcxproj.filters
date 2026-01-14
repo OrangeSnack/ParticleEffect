@@ -16,10 +16,19 @@
     <Filter Include="헤더 파일\EditorRegistry">
       <UniqueIdentifier>{6d6cef44-2f68-47f5-a714-d401bbbd5fb8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Project">
+      <UniqueIdentifier>{430e761f-0d72-4342-a469-23d1f22139e1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EditorRegistry.h">
       <Filter>헤더 파일\EditorRegistry</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectManager.h">
+      <Filter>헤더 파일\Project</Filter>
+    </ClInclude>
+    <ClInclude Include="Project.h">
+      <Filter>헤더 파일\Project</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

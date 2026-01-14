@@ -42,6 +42,76 @@ void MMMEngine::TimeManager::BeginFrame()
         : 0.0f;
 }
 
+const float MMMEngine::TimeManager::GetDeltaTime() const
+{
+    return m_deltaTime;
+}
+
+const float MMMEngine::TimeManager::GetFixedDeltaTime() const
+{
+    return m_fixedDeltaTime;
+}
+
+const float MMMEngine::TimeManager::GetTotalTime() const
+{
+    return m_totalTime;
+}
+
+const float MMMEngine::TimeManager::GetFixedTime() const
+{
+    return m_fixedTime;
+}
+
+const float MMMEngine::TimeManager::GetUnscaledTime() const
+{
+    return m_unscaledTotalTime;
+}
+
+const float MMMEngine::TimeManager::GetUnscaledDeltaTime() const
+{
+    return m_unscaledDeltaTime;
+}
+
+const float MMMEngine::TimeManager::GetTimeScale() const
+{
+    return m_timeScale;
+}
+
+const float MMMEngine::TimeManager::GetMaximumAllowedTimestep() const
+{
+    return m_maximumAllowedTimestep;
+}
+
+const uint32_t MMMEngine::TimeManager::GetFrameCount() const
+{
+    return m_frameCount;
+}
+
+void MMMEngine::TimeManager::SetFixedDeltaTime(float fixedDelta)
+{
+    m_fixedDeltaTime = fixedDelta;
+}
+
+void MMMEngine::TimeManager::SetMaximumAllowedTimestep(float allowedTimestep)
+{
+    m_maximumAllowedTimestep = allowedTimestep;
+}
+
+void MMMEngine::TimeManager::SetDefaultFixedDeltaTime()
+{
+    m_fixedDeltaTime = 0.03125f;
+}
+
+void MMMEngine::TimeManager::SetDefaultMaximumAllowedTimestep()
+{
+    m_maximumAllowedTimestep = 0.2f;
+}
+
+void MMMEngine::TimeManager::ResetFrameCount()
+{
+    m_frameCount = 0;
+}
+
 void MMMEngine::TimeManager::StartUp()
 {
     m_initTime = STD_Clock::now();

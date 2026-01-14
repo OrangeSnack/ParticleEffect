@@ -141,6 +141,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="EditorRegistry.h" />
+    <ClInclude Include="ProjectManager.h" />
+    <ClInclude Include="Project.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

@@ -1,6 +1,20 @@
 #include "Behaviour.h"
 #include "BehaviourManager.h"
 
+#include "rttr/registration"
+#include "rttr/detail/policies/ctor_policies.h"
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace MMMEngine;
+
+	registration::class_<Behaviour>("Behaviour")
+		.property("Enabled", &Behaviour::GetEnabled, &Behaviour::SetEnabled)
+		.property_readonly("IsActiveAndEnabled", &Behaviour::IsActiveAndEnabled);
+}
+
+
 MMMEngine::Behaviour::Behaviour() 
 	: m_enabled(true)
 {

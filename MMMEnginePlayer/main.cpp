@@ -23,8 +23,8 @@ ObjPtr<GameObject> g_pPlayer = nullptr;
 
 void Initialize()
 {
-	InputManager::Get().StartUp(GlobalRegistry::Get().GetApp()->GetWindowHandle());
-	GlobalRegistry::Get().GetApp()->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
+	InputManager::Get().StartUp(GlobalRegistry::g_pApp->GetWindowHandle());
+	GlobalRegistry::g_pApp->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
 
 	BehaviourManager::Get().StartUp();
 
@@ -64,15 +64,10 @@ void Update()
 	ObjectManager::Get().ProcessPendingDestroy();
 }
 
-void Render()
-{
-
-}
-
 void Release()
 {
 	BehaviourManager::Get().ShutDown();
-	GlobalRegistry::Get().UnregisterApp();
+	GlobalRegistry::g_pApp = nullptr;
 }
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -81,11 +76,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_ int       nCmdShow)
 {
 	App app{ hInstance,L"MMMPlayer",1280,720 };
-	GlobalRegistry::Get().RegisterApp(&app);
+	GlobalRegistry::g_pApp = &app;
 
 	app.OnInitialize.AddListener<&Initialize>();
 	app.OnUpdate.AddListener<&Update>();
-	app.OnRender.AddListener<&Render>();
 	app.OnRelease.AddListener<&Release>();
 	app.Run();
 }

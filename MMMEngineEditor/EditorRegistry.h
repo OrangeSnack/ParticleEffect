@@ -1,6 +1,6 @@
 #pragma once
 
-namespace MMMEngine::Editor
+namespace MMMEngine::EditorRegistry
 {
 
 }

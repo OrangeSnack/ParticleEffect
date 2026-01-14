@@ -14,8 +14,8 @@ using namespace MMMEngine::Utility;
 
 void Init()
 {
-	InputManager::Get().StartUp(g_pApp->GetWindowHandle());
-	g_pApp->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
+	InputManager::Get().StartUp(GlobalRegistry::g_pApp->GetWindowHandle());
+	GlobalRegistry::g_pApp->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
 }
 
 void Update()
@@ -23,10 +23,15 @@ void Update()
 	InputManager::Get().Update();
 }
 
+void Release()
+{
+	GlobalRegistry::g_pApp = nullptr;
+}
+
 int main()
 {
 	App app;
-	MMMEngine::g_pApp = &app;
+	GlobalRegistry::g_pApp = &app;
 
 	app.OnInitialize.AddListener<&Init>();
 	app.OnUpdate.AddListener<&Update>();

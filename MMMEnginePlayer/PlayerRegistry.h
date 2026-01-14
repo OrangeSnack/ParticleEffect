@@ -1,6 +1,6 @@
 #pragma once
 
-namespace MMMEngine::Player
+namespace MMMEngine::PlayerRegistry
 {
 
 }

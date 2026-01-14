@@ -157,6 +157,9 @@
     <Filter Include="소스 파일\Core\GlobalRegistry">
       <UniqueIdentifier>{217c690e-d5d9-466a-adc0-74b9d1005041}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Core\Resource API\Importer">
+      <UniqueIdentifier>{39633105-b094-4f7f-b6a0-edf4b5acd602}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">
@@ -702,6 +705,9 @@
     <ClInclude Include="ExportSingleton.hpp">
       <Filter>헤더 파일\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="MissingScriptBehaviour.h">
+      <Filter>헤더 파일\Core\Behaviour API</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rttr\constructor.cpp">
@@ -838,6 +844,15 @@
     </ClCompile>
     <ClCompile Include="GlobalRegistry.cpp">
       <Filter>소스 파일\Core\GlobalRegistry</Filter>
+    </ClCompile>
+    <ClCompile Include="MissingScriptBehaviour.cpp">
+      <Filter>소스 파일\Core\Behaviour API</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptBehaviour.cpp">
+      <Filter>소스 파일\Core\Behaviour API</Filter>
+    </ClCompile>
+    <ClCompile Include="Resource.cpp">
+      <Filter>소스 파일\Core\Resource API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

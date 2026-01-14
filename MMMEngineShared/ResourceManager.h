@@ -22,8 +22,8 @@ namespace MMMEngine
 
 	struct ResKey
 	{
-		std::wstring path;
 		std::string typeName;
+		std::wstring path;
 
 		bool operator==(const ResKey& o) const noexcept {
 			return typeName == o.typeName && path == o.path;
@@ -53,7 +53,7 @@ namespace MMMEngine
 		{
 			static_assert(std::is_base_of_v<Resource, T>, "T는 반드시 Resource를 상속받아야 합니다.");
 
-			ResKey key{ filePath, T::GetStaticTypeName() };
+			ResKey key{ filePath, rttr::type::get<T>().get_name().to_string() };
 
 			if (auto it = m_cache.find(key); it != m_cache.end())
 				if (auto sp = it->second.lock())
@@ -69,9 +69,9 @@ namespace MMMEngine
 		}
 
 
-		bool Contains(const char* typeString, const std::wstring& filePath)
+		bool Contains(const std::string& typeString, const std::wstring& filePath)
 		{
-			ResKey key{ filePath, typeString };
+			ResKey key{ typeString, filePath };
 
 			auto resource_iter = m_cache.find(key);
 			if (resource_iter != m_cache.end())

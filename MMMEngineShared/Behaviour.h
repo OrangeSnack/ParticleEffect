@@ -86,6 +86,8 @@ namespace MMMEngine
 	class MMMENGINE_API Behaviour : public Component
 	{
 	private:
+		RTTR_ENABLE(Component)
+		RTTR_REGISTRATION_FRIEND
 		friend class BehaviourManager;
 		friend class GameObject;
 
@@ -114,8 +116,6 @@ namespace MMMEngine
 
 	protected:
 		Behaviour();
-		virtual ~Behaviour() = default;
-
 		virtual void Initialize() override;
 		virtual void UnInitialize() override;
 
@@ -138,6 +138,8 @@ namespace MMMEngine
 		
 
 	public:
+		virtual ~Behaviour() = default;
+
 		bool GetEnabled() const { return m_enabled; }
 		void SetEnabled(bool value);
 
