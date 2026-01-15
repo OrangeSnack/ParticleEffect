@@ -5,23 +5,15 @@
 #include "PlayerRegistry.h"
 #include "App.h"
 
-#include "MMMApplication.h"
-#include "MMMScreen.h"
-#include "MMMTime.h"
-#include "MMMInput.h"
-
 #include "InputManager.h"
 #include "TimeManager.h"
 #include "ResourceManager.h"
 #include "BehaviourManager.h"
 #include "ObjectManager.h"
 #include "SceneManager.h"
-#include "MMMSceneManagement.h"
 
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
-
-ObjPtr<GameObject> g_pPlayer = nullptr;
 
 void Initialize()
 {
@@ -31,10 +23,6 @@ void Initialize()
 	SceneManager::Get().StartUp(L"Data/", false);
 
 	BehaviourManager::Get().StartUp();
-
-	g_pPlayer = Object::NewObject<GameObject>("Player");
-
-	Object::Destroy(g_pPlayer,5.0f);
 }
 
 void Update()

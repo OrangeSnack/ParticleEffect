@@ -1,8 +1,8 @@
 #pragma once
 #include "GlobalRegistry.h"
-//#include "RenderManager.h"
-
+#include "DisplayMode.h"
 #include "SimpleMath.h"
+#include "App.h"
 #include <cassert>
 
 namespace MMMEngine::Screen
