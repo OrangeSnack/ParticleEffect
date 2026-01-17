@@ -37,6 +37,12 @@
     <Filter Include="소스 파일\ImGui\ForEditorContext">
       <UniqueIdentifier>{21b902e5-596e-44c6-a214-afeec71509be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\EditorWIndow">
+      <UniqueIdentifier>{3ef9e4fd-7906-456e-81aa-e94746d51ac1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\EditorWindow">
+      <UniqueIdentifier>{e99458c1-bb5b-4989-ac60-fb961dbb3c87}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EditorRegistry.h">
@@ -78,6 +84,9 @@
     <ClInclude Include="ImGuiEditorContext.h">
       <Filter>헤더 파일\ImGui\ForEditorContext</Filter>
     </ClInclude>
+    <ClInclude Include="HierarchyWindow.h">
+      <Filter>헤더 파일\EditorWindow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -109,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="ImGuiEditorContext.cpp">
       <Filter>소스 파일\ImGui\ForEditorContext</Filter>
+    </ClCompile>
+    <ClCompile Include="HierarchyWindow.cpp">
+      <Filter>소스 파일\EditorWIndow</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

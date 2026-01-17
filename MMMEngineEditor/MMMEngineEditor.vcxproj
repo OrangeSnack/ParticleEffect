@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="EditorRegistry.h" />
+    <ClInclude Include="HierarchyWindow.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_null.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
@@ -156,6 +157,7 @@
     <ClInclude Include="Project.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="HierarchyWindow.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_null.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp" />

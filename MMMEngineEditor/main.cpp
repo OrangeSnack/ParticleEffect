@@ -10,6 +10,8 @@
 #include "TimeManager.h"
 #include "RenderManager.h"
 #include "BehaviourManager.h"
+#include "SceneManager.h"
+#include "ObjectManager.h"
 
 #include "ImGuiEditorContext.h"
 
@@ -25,7 +27,11 @@ void Initialize()
 
 	InputManager::Get().StartUp(hwnd);
 	TimeManager::Get().StartUp();
+	SceneManager::Get().StartUp(L"Assets/Scene", true);
 	app->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
+
+	ObjectManager::Get().StartUp();
+	BehaviourManager::Get().StartUp();
 
 	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
 	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeScreen>(&RenderManager::Get());
@@ -39,7 +45,22 @@ void Update()
 	TimeManager::Get().BeginFrame();
 	InputManager::Get().Update();
 
+	float dt = TimeManager::Get().GetDeltaTime();
+	if (SceneManager::Get().CheckSceneIsChanged())
+	{
+		ObjectManager::Get().UpdateInternalTimer(dt);
+		BehaviourManager::Get().DisableBehaviours();
+		ObjectManager::Get().ProcessPendingDestroy();
+		BehaviourManager::Get().AllSortBehaviours();
+		BehaviourManager::Get().AllBroadCastBehaviourMessage("OnSceneLoaded");
+	}
+
 	static bool isGameRunning = false;
+
+	if (isGameRunning)
+	{
+		BehaviourManager::Get().InitializeBehaviours();
+	}
 
 	TimeManager::Get().ConsumeFixedSteps([&](float fixedDt)
 		{
@@ -59,6 +80,10 @@ void Update()
 	ImGuiEditorContext::Get().Render();
 	ImGuiEditorContext::Get().EndFrame();
 	RenderManager::Get().EndFrame();
+
+	ObjectManager::Get().UpdateInternalTimer(dt);
+	BehaviourManager::Get().DisableBehaviours();
+	ObjectManager::Get().ProcessPendingDestroy();
 }
 
 void Release()
@@ -67,6 +92,10 @@ void Release()
 	RenderManager::Get().ShutDown();
 	TimeManager::Get().ShutDown();
 	InputManager::Get().ShutDown();
+
+	SceneManager::Get().ShutDown();
+	ObjectManager::Get().ShutDown();
+	BehaviourManager::Get().ShutDown();
 }
 
 int main()

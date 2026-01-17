@@ -40,6 +40,10 @@ namespace MMMEngine
 		void ShutDown();
 		bool CheckSceneIsChanged();
 
+		std::vector<ObjPtr<GameObject>> GetAllGameObjectInCurrentScene();
+
+		ObjPtr<GameObject> FindWithMUID(const SceneRef& ref, Utility::MUID muid);
+
 		ObjPtr<GameObject> FindFromAllScenes(const std::string& name);
 		ObjPtr<GameObject> FindWithTagFromAllScenes(const std::string& tag);
 		std::vector<ObjPtr<GameObject>> FindGameObjectsWithTagFromAllScenes(const std::string& tag);

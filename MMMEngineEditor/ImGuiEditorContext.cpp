@@ -4,6 +4,8 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx11.h>
 
+#include "HierarchyWindow.h"
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void MMMEngine::Editor::ImGuiEditorContext::UpdateInfiniteDrag()
@@ -188,18 +190,7 @@ void MMMEngine::Editor::ImGuiEditorContext::BeginFrame()
 
 void MMMEngine::Editor::ImGuiEditorContext::Render()
 {
-    // 1. 도킹될 위치를 미리 보여주는 사각형의 색상 (Docking Preview)
-// ImVec4(R, G, B, A) -> 0.0f ~ 1.0f 사이의 값
-        //style.Colors[ImGuiCol_DockingPreview] = ImVec4(0.45f, 0.45f, 0.45f, 0.83f);
-
-        //// 2. 도킹된 창의 탭이 활성화되었을 때의 색상 (선택 사항)
-        //style.Colors[ImGuiCol_TabActive] = ImVec4(0.12f, 0.12f, 0.4f, 1.00f);
-        //style.Colors[ImGuiCol_TabHovered] = ImVec4(0.40f, 0.40f, 0.40f, 1.00f);
-        //style.Colors[ImGuiCol_Tab] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
-        //style.Colors[ImGuiCol_TabUnfocused] = ImVec4(0.15f, 0.15f, 0.15f, 1.00f);
-        //style.Colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
-
-        // 1. 메인 뷰포트 정보 가져오기
+    // 1. 메인 뷰포트 정보 가져오기
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -231,9 +222,9 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     // 6. 메뉴바 구현
     if (ImGui::BeginMenuBar())
     {
-        if (ImGui::BeginMenu("File"))
+        if (ImGui::BeginMenu(u8"파일"))
         {
-            if (ImGui::MenuItem("Exit")) p_open = false;
+            if (ImGui::MenuItem(u8"끝내기")) p_open = false;
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -248,10 +239,8 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     style.GrabRounding = 6.0f;
     style.ScrollbarRounding = 6.0f;
     style.WindowMenuButtonPosition = ImGuiDir_None;
-    ImGui::Begin(u8"속성");
-    ImGui::Text(u8"이 창은 테두리가 둥글게 나옵니다.");
-    ImGui::End();
 
+    HierarchyWindow::Get().Render();
 }
 
 void MMMEngine::Editor::ImGuiEditorContext::EndFrame()

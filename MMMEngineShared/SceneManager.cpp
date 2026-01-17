@@ -177,7 +177,21 @@ bool MMMEngine::SceneManager::CheckSceneIsChanged()
 	return false;
 }
 
-MMMEngine::ObjPtr< MMMEngine::GameObject> MMMEngine::SceneManager::FindFromAllScenes(const std::string& name)
+MMMEngine::ObjPtr< MMMEngine::GameObject> MMMEngine::SceneManager::FindWithMUID(const SceneRef& ref, Utility::MUID muid)
+{
+	auto scene = m_scenes[ref.id].get();
+
+	const auto& objs = scene->GetGameObjects();
+	for (auto& go : objs)
+	{
+		if (go->GetMUID() == muid)
+			return go;
+	}
+
+	return nullptr;
+}
+
+MMMEngine::ObjPtr<MMMEngine::GameObject> MMMEngine::SceneManager::FindFromAllScenes(const std::string& name)
 {
 	for (auto& scene : m_scenes)
 	{
@@ -225,6 +239,14 @@ MMMEngine::ObjPtr< MMMEngine::GameObject> MMMEngine::SceneManager::FindWithTagFr
 	}
 
 	return nullptr;
+}
+
+std::vector<MMMEngine::ObjPtr< MMMEngine::GameObject>> MMMEngine::SceneManager::GetAllGameObjectInCurrentScene()
+{
+	if (m_currentSceneID >= m_scenes.size())
+		return std::vector<ObjPtr<GameObject>>();
+
+	return m_scenes[m_currentSceneID]->GetGameObjects();
 }
 
 std::vector<MMMEngine::ObjPtr< MMMEngine::GameObject>> MMMEngine::SceneManager::FindGameObjectsWithTagFromAllScenes(const std::string& tag)
