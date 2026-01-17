@@ -166,6 +166,18 @@
     <Filter Include="소스 파일\Utility\RTTRRegistry">
       <UniqueIdentifier>{72b6886a-0c46-4ae0-8d62-ce00537cd485}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Core\Render API">
+      <UniqueIdentifier>{40b7158d-7ebd-49ac-99d6-edf8f26a4e2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\Render API">
+      <UniqueIdentifier>{1cec20a9-1188-40bb-9133-6ac8013e9f9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\Render API\Component">
+      <UniqueIdentifier>{0e59476e-dea6-4d08-88c1-25db456774a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core\Render API\Component">
+      <UniqueIdentifier>{b49ed825-6352-4a69-b964-0fc912cadab6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">
@@ -723,6 +735,15 @@
     <ClInclude Include="SceneSerializer.h">
       <Filter>헤더 파일\Core\Scene API</Filter>
     </ClInclude>
+    <ClInclude Include="RenderManager.h">
+      <Filter>헤더 파일\Core\Render API</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>헤더 파일\Core\Render API</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>헤더 파일\Core\Render API\Component</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="rttr\constructor.cpp">
@@ -883,6 +904,18 @@
     </ClCompile>
     <ClCompile Include="rttr_simplemath_registry.cpp">
       <Filter>소스 파일\Utility\RTTRRegistry</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManager.cpp">
+      <Filter>소스 파일\Core\Render API</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>소스 파일\Core\Render API</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderShared.h">
+      <Filter>헤더 파일\Core\Render API</Filter>
+    </ClCompile>
+    <ClCompile Include="EditorCamera.cpp">
+      <Filter>소스 파일\Core\Render API\Component</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

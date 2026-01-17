@@ -1,50 +1,114 @@
 #pragma once
-#include <memory>
-#include <unordered_map>
-#include <vector>
+#include "Export.h"
 #include "ExportSingleton.hpp"
+#include <Renderer.h>
+#include <map>
+#include <vector>
+#include <memory>
+#include <d3d11_4.h>
+#include <dxgi1_4.h>
+#include <wrl/client.h>
+#include <SimpleMath.h>
+#include <RenderShared.h>
+#include <Object.h>
 
-//#include <directxtk/CommonStates.h>
-//#include <directxtk/Effects.h>
-
-#include <Windows.h>
-#include <d3d11.h>
-#include <d3d11_1.h>
-
-#include <wrl/client.h> // Microsoft::WRL::ComPtr
-
-
-#pragma comment(lib, "d3d11.lib")
+#pragma comment (lib, "d3d11.lib")
+#pragma comment (lib, "dxgi.lib")
 
 namespace MMMEngine
 {
+	class Transform;
+	class EditorCamera;
 	class MMMENGINE_API RenderManager : public Utility::ExportSingleton<RenderManager>
 	{
 	private:
-        // ÇÙ½É ÀÎÇÁ¶ó
-        Microsoft::WRL::ComPtr<ID3D11Device>            m_device;
-        Microsoft::WRL::ComPtr<ID3D11DeviceContext>     m_context;
-        Microsoft::WRL::ComPtr<IDXGISwapChain>          m_swapChain;
+		std::map<int, std::vector<std::shared_ptr<Renderer>>> m_Passes;
 
-        // ·»´õ Å¸°Ù ¹× µª½º ¹öÆÛ
-        Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
+    protected:
+        HWND* m_pHwnd = nullptr;	// HWND í¬ì¸í„°
+        UINT m_rClientWidth = 0;
+        UINT m_rClientHeight = 0;
+        float m_backColor[4] = { 0.0f, 0.5f, 0.5f, 1.0f };	// ë°±ê·¸ë¼ìš´ë“œ ì»¬ëŸ¬
 
-        // °ø¿ë ½ºÅ×ÀÌÆ® (ÃÊ±âÈ­ ½Ã ¹Ì¸® »ı¼º)
-        Microsoft::WRL::ComPtr<ID3D11BlendState>        m_blendStateAlpha;
-        Microsoft::WRL::ComPtr<ID3D11BlendState>        m_blendStateOpaque;
-        Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilStateLess;
-        Microsoft::WRL::ComPtr<ID3D11SamplerState>      m_samplerLinear;
+		// ë””ë°”ì´ìŠ¤
+		Microsoft::WRL::ComPtr<ID3D11Device5> m_pDevice;
+
+		// ê¸°ë³¸ ë Œë” ì¸í„°í˜ì´ìŠ¤
+		Microsoft::WRL::ComPtr<ID3D11DeviceContext4> m_pDeviceContext;		// ë””ë°”ì´ìŠ¤ ì»¨í…ìŠ¤íŠ¸
+		Microsoft::WRL::ComPtr<IDXGISwapChain4> m_pSwapChain;				// ìŠ¤ì™‘ì²´ì¸
+
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1> m_pRenderTargetView;	// ë Œë”ë§ íƒ€ê²Ÿë·°
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;		// ê¹Šì´ê°’ ì²˜ë¦¬ë¥¼ ìœ„í•œ ëŠìŠ¤ìŠ¤í…ì‹¤ ë·°
+
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pDafaultSamplerLinear;		// ìƒ˜í”ŒëŸ¬ ìƒíƒœ.
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState2> m_pDefaultRS;			// ê¸°ë³¸ RS
+
+		Microsoft::WRL::ComPtr<ID3D11BlendState1> m_pDefaultBS;		// ê¸°ë³¸ ë¸”ëœë“œ ìŠ¤í…Œì´íŠ¸
+		Microsoft::WRL::ComPtr<ID3D11RasterizerState2> m_DefaultRS;	// ê¸°ë³¸ ë ˆìŠ¤í„°ë¼ì´ì € ìŠ¤í…Œì´íŠ¸
+		D3D11_VIEWPORT m_defaultViewport;							// ê¸°ë³¸ ë·°í¬íŠ¸
+
+		// ë²„í¼ ê¸°ë³¸ìƒ‰ìƒ
+		DirectX::SimpleMath::Vector4 m_ClearColor;
+
+		// ì¹´ë©”ë¼ ê´€ë ¨
+		ObjPtr<EditorCamera> m_pCamera;
+		Render_CamBuffer m_camMat;
+		Microsoft::WRL::ComPtr<ID3D11Buffer> m_pCambuffer = nullptr;		// íŠ¸ëœìŠ¤í¼ ë²„í¼
+
+		// ë°±ë²„í¼ í…ìŠ¤ì³
+		Microsoft::WRL::ComPtr<ID3D11Texture2D1> m_pBackBuffer = nullptr;		// ë°±ë²„í¼ í…ìŠ¤ì²˜
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView1> m_pBackSRV = nullptr;	// ë°±ë²„í¼ SRV
+    public:
+        class MMMENGINE_API CreationScope
+        {
+        public:
+            CreationScope();
+            ~CreationScope();
+        };
+
+        class MMMENGINE_API DestroyScope
+        {
+        public:
+            DestroyScope();
+            ~DestroyScope();
+        };
+
+		void Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight);
+		void InitD3D();
+		void UnInitD3D();
+		void Start();
+		void Render();
+
 	public:
-        // ¸®¼Ò½º »ı¼º µµ¿ì¹Ì (Renderer ÄÄÆ÷³ÍÆ®µéÀÌ »ç¿ë)
-        ID3D11Device* GetDevice() { return m_device.Get(); }
-        ID3D11DeviceContext* GetContext() { return m_context.Get(); }
+		template <typename T, typename... Args>
+		std::weak_ptr<Renderer> AddRenderer(RenderType _passType, Args&&... args);
 
-        void StartUp();
-        void ShutDown();
-
-        // ·»´õ¸µ ·çÇÁ ÁøÀÔÁ¡
-        void BeginFrame();
-        void EndFrame(); // Present() È£Ãâ
+		template <typename T>
+		bool RemoveRenderer(RenderType _passType, std::shared_ptr<T>& _renderer);
 	};
-}
+
+	template <typename T, typename... Args>
+	std::weak_ptr<Renderer>
+		RenderManager::AddRenderer(RenderType _passType, Args&&... args)
+	{
+		std::shared_ptr<T> temp = std::make_shared<T>(std::forward<Args>(args)...);
+		passes[_passType].push_back(temp);
+
+		return temp;
+	}
+
+	template <typename T>
+	bool RenderManager::RemoveRenderer(RenderType _passType, std::shared_ptr<T>& _renderer)
+	{
+		if (_renderer && (passes.find(_passType) != passes.end())) {
+			auto it = std::find(passes[_passType].begin(), passes[_passType].end(), _renderer);
+
+			if (it != passes[_passType].end()) {
+				passes[_passType].erase(it);
+				return true;
+			}
+		}
+
+		return false;
+	}
+} 
