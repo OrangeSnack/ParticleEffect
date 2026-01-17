@@ -153,6 +153,7 @@
     <ClInclude Include="imgui-docking\imstb_textedit.h" />
     <ClInclude Include="imgui-docking\imstb_truetype.h" />
     <ClInclude Include="ImGuiEditorContext.h" />
+    <ClInclude Include="InspectorWindow.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="Project.h" />
   </ItemGroup>
@@ -167,6 +168,7 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="ImGuiEditorContext.cpp" />
+    <ClCompile Include="InspectorWindow.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>

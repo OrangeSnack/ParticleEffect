@@ -13,6 +13,7 @@
 using namespace MMMEngine::EditorRegistry;
 
 #include "HierarchyWindow.h"
+#include "InspectorWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -251,6 +252,7 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
         if (ImGui::BeginMenu(u8"창"))
         {
             ImGui::MenuItem(u8"하이어라키", nullptr, &g_editor_hierarchy_window);
+            ImGui::MenuItem(u8"인스펙터", nullptr, &g_editor_inspector_window);
             ImGui::EndMenu();
         }
         ImGui::EndMenuBar();
@@ -267,6 +269,7 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     style.WindowMenuButtonPosition = ImGuiDir_None;
 
     HierarchyWindow::Get().Render();
+    InspectorWindow::Get().Render();
 }
 
 void MMMEngine::Editor::ImGuiEditorContext::EndFrame()
@@ -284,7 +287,16 @@ void MMMEngine::Editor::ImGuiEditorContext::EndFrame()
 
 void MMMEngine::Editor::ImGuiEditorContext::Uninitialize()
 {
+    if (m_isD3D11BackendInit)
+        ImGui_ImplDX11_Shutdown();
+    if (m_isWin32BackendInit)
+        ImGui_ImplWin32_Shutdown();
+    if (m_isImGuiInit)
+        ImGui::DestroyContext();
 
+    m_isImGuiInit = false;
+    m_isWin32BackendInit = false;
+    m_isD3D11BackendInit = false;
 }
 
 bool MMMEngine::Editor::ImGuiEditorContext::GetIsHovered()

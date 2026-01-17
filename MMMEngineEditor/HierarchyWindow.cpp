@@ -18,8 +18,6 @@ struct ReparentCmd
 
 static std::vector<ReparentCmd> g_reparentQueue;
 
-ObjPtr<GameObject> g_selectedGameObject = nullptr;
-
 MUID GetMuid(const std::string& type)
 {
 	MUID result = MUID::Empty();

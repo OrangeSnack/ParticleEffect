@@ -31,12 +31,6 @@
     <Filter Include="소스 파일\ImGui\Backend">
       <UniqueIdentifier>{c365af90-17c9-425c-9a50-491f33c8b8d3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일\ImGui\ForEditorContext">
-      <UniqueIdentifier>{ec4962c3-a422-4040-bc15-fd4c8e4c2f6b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\ImGui\ForEditorContext">
-      <UniqueIdentifier>{21b902e5-596e-44c6-a214-afeec71509be}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\EditorWIndow">
       <UniqueIdentifier>{3ef9e4fd-7906-456e-81aa-e94746d51ac1}</UniqueIdentifier>
     </Filter>
@@ -45,6 +39,12 @@
     </Filter>
     <Filter Include="소스 파일\Project">
       <UniqueIdentifier>{6179e345-0100-4c05-99da-7afa1b557ef6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\EditorWIndow\ForEditorContext">
+      <UniqueIdentifier>{21b902e5-596e-44c6-a214-afeec71509be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\EditorWindow\ForEditorContext">
+      <UniqueIdentifier>{ec4962c3-a422-4040-bc15-fd4c8e4c2f6b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -85,9 +85,12 @@
       <Filter>헤더 파일\ImGui\Backend</Filter>
     </ClInclude>
     <ClInclude Include="ImGuiEditorContext.h">
-      <Filter>헤더 파일\ImGui\ForEditorContext</Filter>
+      <Filter>헤더 파일\EditorWindow\ForEditorContext</Filter>
     </ClInclude>
     <ClInclude Include="HierarchyWindow.h">
+      <Filter>헤더 파일\EditorWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="InspectorWindow.h">
       <Filter>헤더 파일\EditorWindow</Filter>
     </ClInclude>
   </ItemGroup>
@@ -120,9 +123,12 @@
       <Filter>소스 파일\ImGui\Backend</Filter>
     </ClCompile>
     <ClCompile Include="ImGuiEditorContext.cpp">
-      <Filter>소스 파일\ImGui\ForEditorContext</Filter>
+      <Filter>소스 파일\EditorWIndow\ForEditorContext</Filter>
     </ClCompile>
     <ClCompile Include="HierarchyWindow.cpp">
+      <Filter>소스 파일\EditorWIndow</Filter>
+    </ClCompile>
+    <ClCompile Include="InspectorWindow.cpp">
       <Filter>소스 파일\EditorWIndow</Filter>
     </ClCompile>
   </ItemGroup>
