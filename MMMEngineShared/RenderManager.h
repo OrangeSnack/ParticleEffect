@@ -1,14 +1,17 @@
 #pragma once
 #include "Export.h"
 #include "ExportSingleton.hpp"
-#include <Renderer.h>
+#include <RendererBase.h>
 #include <map>
 #include <vector>
 #include <memory>
-#include <d3d11_4.h>
+#include <type_traits>
+#include <typeindex>
+
 #include <dxgi1_4.h>
 #include <wrl/client.h>
 #include <SimpleMath.h>
+
 #include <RenderShared.h>
 #include <Object.h>
 
@@ -19,17 +22,22 @@ namespace MMMEngine
 {
 	class Transform;
 	class EditorCamera;
+	class Material;
 	class MMMENGINE_API RenderManager : public Utility::ExportSingleton<RenderManager>
 	{
+		friend class Utility::ExportSingleton<RenderManager>;
+		friend class RendererBase;
+		friend class Material;
 	private:
-		std::map<int, std::vector<std::shared_ptr<Renderer>>> m_Passes;
+		RenderManager() = default;
+		std::map<int, std::vector<std::shared_ptr<RendererBase>>> m_Passes;
 
     protected:
         HWND* m_pHwnd = nullptr;	// HWND 포인터
         UINT m_rClientWidth = 0;
         UINT m_rClientHeight = 0;
         float m_backColor[4] = { 0.0f, 0.5f, 0.5f, 1.0f };	// 백그라운드 컬러
-
+		
 		// 디바이스
 		Microsoft::WRL::ComPtr<ID3D11Device5> m_pDevice;
 
@@ -59,36 +67,21 @@ namespace MMMEngine
 		Microsoft::WRL::ComPtr<ID3D11Texture2D1> m_pBackBuffer = nullptr;		// 백버퍼 텍스처
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView1> m_pBackSRV = nullptr;	// 백버퍼 SRV
     public:
-        class MMMENGINE_API CreationScope
-        {
-        public:
-            CreationScope();
-            ~CreationScope();
-        };
-
-        class MMMENGINE_API DestroyScope
-        {
-        public:
-            DestroyScope();
-            ~DestroyScope();
-        };
-
 		void Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight);
 		void InitD3D();
 		void UnInitD3D();
 		void Start();
 		void Render();
-
 	public:
 		template <typename T, typename... Args>
-		std::weak_ptr<Renderer> AddRenderer(RenderType _passType, Args&&... args);
+		std::weak_ptr<RendererBase> AddRenderer(RenderType _passType, Args&&... args);
 
 		template <typename T>
 		bool RemoveRenderer(RenderType _passType, std::shared_ptr<T>& _renderer);
 	};
 
 	template <typename T, typename... Args>
-	std::weak_ptr<Renderer>
+	std::weak_ptr<RendererBase>
 		RenderManager::AddRenderer(RenderType _passType, Args&&... args)
 	{
 		std::shared_ptr<T> temp = std::make_shared<T>(std::forward<Args>(args)...);

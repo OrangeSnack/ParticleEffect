@@ -2,30 +2,13 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include <EditorCamera.h>
+#include <RendererTools.h>
 
 DEFINE_SINGLETON(MMMEngine::RenderManager)
 
 using namespace Microsoft::WRL;
 
 namespace MMMEngine {
-
-    static bool s_isCreatingRenderer = false;
-    static bool s_isDestroyingRenderer = false;
-
-    RenderManager::CreationScope::CreationScope() {
-        s_isCreatingRenderer = true;
-    }
-    RenderManager::CreationScope::~CreationScope() {
-        s_isCreatingRenderer = false;
-    }
-
-    RenderManager::DestroyScope::DestroyScope() {
-        s_isDestroyingRenderer = true;
-    }
-    RenderManager::DestroyScope::~DestroyScope() {
-        s_isDestroyingRenderer = false;
-    }
-
     void RenderManager::Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight)
     {
         // 디바이스 생성
@@ -85,9 +68,9 @@ namespace MMMEngine {
 		HR_T(context.As(&m_pDeviceContext));
 
 		// 렌더타겟 생성
-		ComPtr<ID3D11Texture2D1> backBuffer;
-		HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D1), (void**)backBuffer.GetAddressOf()));
-		HR_T(m_pDevice->CreateRenderTargetView1(backBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
+		HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D1), (void**)m_pBackBuffer.GetAddressOf()));
+		HR_T(m_pDevice->CreateRenderTargetView1(m_pBackBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
+		HR_T(m_pDevice->CreateShaderResourceView1(m_pBackBuffer.Get(), nullptr, m_pBackSRV.GetAddressOf()));
 
 		// 뷰포트 설정
 		m_defaultViewport = {};
@@ -180,7 +163,40 @@ namespace MMMEngine {
         bd.ByteWidth = sizeof(Render_CamBuffer);
         HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCambuffer.GetAddressOf()));
     }
-    void RenderManager::Render()
+
+	void RenderManager::Render()
     {
+		// Clear
+		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), m_backColor);
+		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		// 캠 버퍼 업데이트
+		auto camTrans = m_pCamera->GetTransform();
+		m_camMat.camPos = (DirectX::SimpleMath::Vector4)camTrans->GetWorldPosition();
+		m_pCamera->GetViewMatrix(m_camMat.mView);
+		m_camMat.mView = DirectX::XMMatrixTranspose(m_camMat.mView);
+		m_camMat.mProjection = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, m_rClientWidth / (FLOAT)m_rClientHeight, 0.01f, 100.0f));
+
+		// 리소스 업데이트
+		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);
+
+		// 기본 렌더셋팅
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCambuffer.GetAddressOf());
+		m_pDeviceContext->PSSetConstantBuffers(0, 1, m_pCambuffer.GetAddressOf());
+
+		m_pDeviceContext->RSSetViewports(1, &m_defaultViewport);
+		m_pDeviceContext->RSSetState(m_pDefaultRS.Get());
+		m_pDeviceContext->OMSetRenderTargets(1, reinterpret_cast<ID3D11RenderTargetView* const*>(m_pRenderTargetView.GetAddressOf()), m_pDepthStencilView.Get());
+
+		// RenderPass
+		for (const auto& pass : m_Passes) {
+			for (const auto& renderer : pass.second) {
+				renderer->Render();
+			}
+		}
+
+		// Present our back buffer to our front buffer
+		m_pSwapChain->Present(0, 0);
     }
 }

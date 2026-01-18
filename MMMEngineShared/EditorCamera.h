@@ -1,6 +1,6 @@
 #pragma once
 #include "Behaviour.h"
-#include <directxtk/SimpleMath.h>
+#include <SimpleMath.h>
 
 namespace MMMEngine {
 	class MMMENGINE_API EditorCamera : public Behaviour

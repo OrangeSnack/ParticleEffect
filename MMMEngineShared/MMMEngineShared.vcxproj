@@ -79,6 +79,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(Platform)\$(Configuration)\EngineShared\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnabled>false</VcpkgEnabled>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -115,7 +118,7 @@
       <ConformanceMode>Default</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)$(ProjectDir)rttr\..;$(ProjectDir);$(ProjectDir)dxtk\Inc;$(ProjectDir)dxtk;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)$(ProjectDir)rttr\..;$(ProjectDir);$(ProjectDir)dxtk\Inc;$(ProjectDir)dxtk;$(ProjectDir)dxtex;$(ProjectDir)DDSTextureLoader</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -156,7 +159,7 @@
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="Behaviour.h" />
-    <ClInclude Include="Camera.h" />
+    <ClInclude Include="EditorCamera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Delegates.hpp" />
     <ClInclude Include="DisplayMode.h" />
@@ -185,6 +188,8 @@
     <ClInclude Include="ExportSingleton.hpp" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlobalRegistry.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="MeshRenderer.h" />
     <ClInclude Include="MissingScriptBehaviour.h" />
     <ClInclude Include="MMMApplication.h" />
     <ClInclude Include="MMMResources.h" />
@@ -195,7 +200,8 @@
     <ClInclude Include="InputKeyCode.h" />
     <ClInclude Include="MMMInput.h" />
     <ClInclude Include="InputManager.h" />
-    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="RendererBase.h" />
+    <ClInclude Include="RendererTools.h" />
     <ClInclude Include="RenderManager.h" />
     <ClInclude Include="Resolution.h" />
     <ClInclude Include="Resource.h" />
@@ -336,8 +342,10 @@
     <ClInclude Include="SceneSerializer.h" />
     <ClInclude Include="ScriptBehaviour.h" />
     <ClInclude Include="SerializableEvent.h" />
+    <ClInclude Include="Shader.h" />
     <ClInclude Include="Singleton.hpp" />
     <ClInclude Include="StringHelper.h" />
+    <ClInclude Include="Texture2D.h" />
     <ClInclude Include="TimeManager.h" />
     <ClInclude Include="Transform.h" />
     <ClInclude Include="ResourceManager.h">
@@ -356,11 +364,14 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GlobalRegistry.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="MeshRenderer.cpp" />
     <ClCompile Include="MissingScriptBehaviour.cpp" />
     <ClCompile Include="MUID.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectManager.cpp" />
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="RendererBase.cpp" />
+    <ClCompile Include="RendererTools.cpp" />
     <ClCompile Include="RenderManager.cpp" />
     <ClCompile Include="RenderShared.h" />
     <ClCompile Include="Resource.cpp" />
@@ -402,6 +413,7 @@
     <ClCompile Include="SceneSerializer.cpp" />
     <ClCompile Include="ScriptBehaviour.cpp" />
     <ClCompile Include="StringHelper.cpp" />
+    <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="TimeManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>

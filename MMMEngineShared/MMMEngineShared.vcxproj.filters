@@ -178,6 +178,15 @@
     <Filter Include="소스 파일\Core\Render API\Component">
       <UniqueIdentifier>{b49ed825-6352-4a69-b964-0fc912cadab6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="헤더 파일\Core\Render API\Resource">
+      <UniqueIdentifier>{b9f1ba23-e29a-4678-b6e5-00423f557c62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Core\Render API\Tool">
+      <UniqueIdentifier>{66353a24-cf77-47fc-8356-1bc4b23e5b62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\Core\Render API\Tools">
+      <UniqueIdentifier>{f84e2c2c-43b1-43c4-95ea-766be768f268}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">
@@ -738,11 +747,26 @@
     <ClInclude Include="RenderManager.h">
       <Filter>헤더 파일\Core\Render API</Filter>
     </ClInclude>
-    <ClInclude Include="Renderer.h">
+    <ClInclude Include="RendererBase.h">
       <Filter>헤더 파일\Core\Render API</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="EditorCamera.h">
       <Filter>헤더 파일\Core\Render API\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshRenderer.h">
+      <Filter>헤더 파일\Core\Render API\Component</Filter>
+    </ClInclude>
+    <ClInclude Include="RendererTools.h">
+      <Filter>헤더 파일\Core\Render API\Tool</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>헤더 파일\Core\Render API</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>헤더 파일\Core\Render API\Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture2D.h">
+      <Filter>헤더 파일\Core\Render API\Resource</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -908,7 +932,7 @@
     <ClCompile Include="RenderManager.cpp">
       <Filter>소스 파일\Core\Render API</Filter>
     </ClCompile>
-    <ClCompile Include="Renderer.cpp">
+    <ClCompile Include="RendererBase.cpp">
       <Filter>소스 파일\Core\Render API</Filter>
     </ClCompile>
     <ClCompile Include="RenderShared.h">
@@ -916,6 +940,18 @@
     </ClCompile>
     <ClCompile Include="EditorCamera.cpp">
       <Filter>소스 파일\Core\Render API\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture2D.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshRenderer.cpp">
+      <Filter>소스 파일\Core\Render API\Component</Filter>
+    </ClCompile>
+    <ClCompile Include="RendererTools.cpp">
+      <Filter>소스 파일\Core\Render API\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>소스 파일\Core\Render API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
