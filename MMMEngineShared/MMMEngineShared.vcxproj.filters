@@ -187,6 +187,9 @@
     <Filter Include="소스 파일\Core\Render API\Tools">
       <UniqueIdentifier>{f84e2c2c-43b1-43c4-95ea-766be768f268}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\Core\Render API\Resource">
+      <UniqueIdentifier>{6b2389a3-5afb-4b2f-ac7d-4b8c86d92fa1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="rttr\access_levels.h">
@@ -941,9 +944,6 @@
     <ClCompile Include="EditorCamera.cpp">
       <Filter>소스 파일\Core\Render API\Component</Filter>
     </ClCompile>
-    <ClCompile Include="Texture2D.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="MeshRenderer.cpp">
       <Filter>소스 파일\Core\Render API\Component</Filter>
     </ClCompile>
@@ -952,6 +952,9 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>소스 파일\Core\Render API</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture2D.cpp">
+      <Filter>소스 파일\Core\Render API\Resource</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

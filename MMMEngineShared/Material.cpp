@@ -30,7 +30,7 @@ void MMMEngine::Material::CreateResourceView(std::filesystem::path& _path, ID3D1
 		DirectX::ScratchImage image;
 		DirectX::TexMetadata meta;
 		HR_T(DirectX::LoadFromTGAFile(_path.wstring().c_str(), &meta, image));
-		HR_T(CreateShaderResourceView(m_pDevice.Get(), image.GetImages(), image.GetImageCount(), meta, _out));
+		HR_T(DirectX::CreateShaderResourceView(m_pDevice.Get(), image.GetImages(), image.GetImageCount(), meta, _out));
 	}
 	else {
 		ID3D11DeviceContext* context = nullptr;
@@ -65,11 +65,48 @@ void MMMEngine::Material::SetVShader(const std::wstring& _filePath)
 {
 	fs::path fPath(_filePath);
 
+	if (fPath.empty() || !fs::exists(fPath))
+		throw std::runtime_error("Material::VSShader not exist !!");
 
+	auto device = RenderManager::Get().GetDevice();
+	auto& blob = m_pVShader->m_pBlob;
+
+	HR_T(CompileShaderFromFile(_filePath.c_str(), "main", "vs_5_0", &blob));
+
+	mw::ComPtr<ID3D11VertexShader> vsShader;
+	HR_T(device->CreateVertexShader(
+		blob->GetBufferPointer(),
+		blob->GetBufferSize(),
+		nullptr,
+		vsShader.GetAddressOf()
+	));
+
+	if (vsShader)
+		m_pVShader->m_ShaderProperty = vsShader;
 }
 
 void MMMEngine::Material::SetPShader(const std::wstring& _filePath)
 {
+	fs::path fPath(_filePath);
+
+	if (fPath.empty() || !fs::exists(fPath))
+		throw std::runtime_error("Material::PSShader not exist !!");
+
+	auto device = RenderManager::Get().GetDevice();
+	auto& blob = m_pPShader->m_pBlob;
+
+	HR_T(CompileShaderFromFile(_filePath.c_str(), "main", "vs_5_0", &blob));
+
+	mw::ComPtr<ID3D11PixelShader> psShader;
+	HR_T(device->CreatePixelShader(
+		blob->GetBufferPointer(),
+		blob->GetBufferSize(),
+		nullptr,
+		psShader.GetAddressOf()
+	));
+
+	if (psShader)
+		m_pPShader->m_ShaderProperty = psShader;
 }
 
 std::shared_ptr<MMMEngine::Shader> MMMEngine::Material::GetShader() const
@@ -79,7 +116,7 @@ std::shared_ptr<MMMEngine::Shader> MMMEngine::Material::GetShader() const
 
 void MMMEngine::Material::LoadTexture(const std::string& _propertyName, const std::wstring& _filePath)
 {
-	/*auto texture = ResourceManager::Get().Load<Texture2D>(_filePath);
+	auto texture = ResourceManager::Get().Load<Texture2D>(_filePath);
 
 	fs::path fPath(_filePath);
 
@@ -90,5 +127,5 @@ void MMMEngine::Material::LoadTexture(const std::string& _propertyName, const st
 		srv.As(&texture->m_pSRV);
 	}
 
-	SetProperty(_propertyName, texture);*/
+	SetProperty(_propertyName, texture);
 }

@@ -72,6 +72,8 @@ namespace MMMEngine
 		void UnInitD3D();
 		void Start();
 		void Render();
+
+		const Microsoft::WRL::ComPtr<ID3D11Device5> GetDevice() const { return m_pDevice; }
 	public:
 		template <typename T, typename... Args>
 		std::weak_ptr<RendererBase> AddRenderer(RenderType _passType, Args&&... args);

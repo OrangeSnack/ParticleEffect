@@ -8,11 +8,12 @@
 
 namespace MMMEngine {
 	using ShaderProperty = std::variant <
-		Microsoft::WRL::ComPtr<ID3D11VertexShader>, Microsoft::WRL::ComPtr<ID3D11PixelShader>,
-		Microsoft::WRL::ComPtr<ID3D10Blob>>;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>, Microsoft::WRL::ComPtr<ID3D11PixelShader>
+		>;
 
 	class MMMENGINE_API Shader : public Resource {
 	public:
 		ShaderProperty m_ShaderProperty;
+		Microsoft::WRL::ComPtr<ID3D10Blob> m_pBlob;
 	};
 }
