@@ -12,6 +12,7 @@
 #include "BehaviourManager.h"
 #include "SceneManager.h"
 #include "ObjectManager.h"
+#include "ProjectManager.h"
 
 #include "ImGuiEditorContext.h"
 
@@ -26,9 +27,18 @@ void Initialize()
 	auto windowInfo = app->GetWindowInfo();
 
 	InputManager::Get().StartUp(hwnd);
-	TimeManager::Get().StartUp();
-	SceneManager::Get().StartUp(L"Assets/Scenes", true);
 	app->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
+	
+	TimeManager::Get().StartUp();
+
+	// 이전에 켰던 프로젝트 우선 확인
+	EditorRegistry::g_editor_project_loaded = ProjectManager::Get().Boot();
+	if (EditorRegistry::g_editor_project_loaded)
+	{
+		// 존재하는 경우 씬을 처음으로 스타트
+		auto currentProject = ProjectManager::Get().GetActiveProject();
+		SceneManager::Get().StartUp(currentProject.ProjectRootFS().generic_wstring() + L"/Assets/Scenes", currentProject.lastSceneIndex, true);
+	}
 
 	ObjectManager::Get().StartUp();
 	BehaviourManager::Get().StartUp();
@@ -40,8 +50,34 @@ void Initialize()
 	app->OnBeforeWindowMessage.AddListener<ImGuiEditorContext, &ImGuiEditorContext::HandleWindowMessage>(&ImGuiEditorContext::Get());
 }
 
+void Update_ProjectNotLoaded()
+{
+	TimeManager::Get().BeginFrame();
+	InputManager::Get().Update();
+
+	RenderManager::Get().BeginFrame();
+	RenderManager::Get().Render();
+	ImGuiEditorContext::Get().BeginFrame();
+	ImGuiEditorContext::Get().Render();
+	ImGuiEditorContext::Get().EndFrame();
+	RenderManager::Get().EndFrame();
+
+	if (EditorRegistry::g_editor_project_loaded)
+	{
+		auto currentProject = ProjectManager::Get().GetActiveProject();
+		SceneManager::Get().StartUp(currentProject.ProjectRootFS().generic_wstring() + L"/Assets/Scenes", 0, true);
+		return;
+	}
+}
+
 void Update()
 {
+	if (!EditorRegistry::g_editor_project_loaded)
+	{
+		Update_ProjectNotLoaded();
+		return;
+	}
+
 	TimeManager::Get().BeginFrame();
 	InputManager::Get().Update();
 
@@ -55,16 +91,14 @@ void Update()
 		BehaviourManager::Get().AllBroadCastBehaviourMessage("OnSceneLoaded");
 	}
 
-	static bool isGameRunning = false;
-
-	if (isGameRunning)
+	if (EditorRegistry::g_editor_scene_playing)
 	{
 		BehaviourManager::Get().InitializeBehaviours();
 	}
 
 	TimeManager::Get().ConsumeFixedSteps([&](float fixedDt)
 		{
-			if (!isGameRunning)
+			if (!EditorRegistry::g_editor_scene_playing)
 				return;
 
 			//PhysicsManager::Get()->PreSyncPhysicsWorld();

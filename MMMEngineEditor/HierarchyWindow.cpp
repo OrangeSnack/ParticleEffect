@@ -136,8 +136,8 @@ void MMMEngine::Editor::HierarchyWindow::Render()
 
 	ImGui::Separator();
 
-
-	if (ImGui::CollapsingHeader(sceneRaw->GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+	std::string showSceneName = sceneRaw->GetName() + ".scene";
+	if (ImGui::CollapsingHeader(showSceneName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
 	{
 		const auto& gameObjects = SceneManager::Get().GetAllGameObjectInCurrentScene();
 

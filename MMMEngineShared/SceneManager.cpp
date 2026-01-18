@@ -9,7 +9,7 @@
 
 DEFINE_SINGLETON(MMMEngine::SceneManager)
 
-void MMMEngine::SceneManager::LoadScenes()
+void MMMEngine::SceneManager::LoadScenes(bool allowEmptyScene)
 {
 	//rootPath에서 bin을 읽어서 m_sceneNameToID; // <Name , ID>를 초기화
 	auto sceneListfilePath = m_sceneListPath + L"/sceneList.bin";
@@ -52,9 +52,19 @@ void MMMEngine::SceneManager::LoadScenes()
 		std::ifstream sceneFile(sceneRootPath, std::ios::binary);
 		if (!sceneFile.is_open())
 		{
-			// todo : 에러로그 만들기, 지금은 빈 씬만 생성
-			m_scenes[index] = std::make_unique<Scene>();
-			m_sceneNameToID[sceneName] = index;
+			if (allowEmptyScene)
+			{
+				CreateEmptyScene(sceneName);
+				auto emptyScene = std::move(m_scenes.back());
+				m_scenes.pop_back();
+				m_scenes[index] = std::move(emptyScene);
+				m_sceneNameToID[sceneName] = index;
+				std::cout << "씬 리스트에 등록된 씬파일을 찾지 못했습니다. -> Scene File : " << sceneName << ".scene \n임시 씬을 생성합니다." << std::endl;
+			}
+			else
+			{
+				assert(false && ("씬 파일 없음: " + sceneName).c_str());
+			}
 			continue;
 		}
 
@@ -240,23 +250,28 @@ void MMMEngine::SceneManager::ChangeScene(const size_t& id)
 		m_nextSceneID = id;
 }
 
-void MMMEngine::SceneManager::StartUp(std::wstring sceneListPath, bool allowEmptyScene)
+void MMMEngine::SceneManager::StartUp(std::wstring sceneListPath, size_t startSceneIDX, bool allowEmptyScene)
 {
 	m_sceneListPath = sceneListPath;
 	m_dontDestroyOnLoadScene = std::make_unique<Scene>();
 
 	// 주어진 경로로 씬리스트 바이너리를 읽고 씬파일경로를 불러와 ID맵을 초기화하고 초기씬을 생성함
-	LoadScenes();
+	LoadScenes(allowEmptyScene);
 
 	if (m_scenes.empty())
 	{
 		if(!allowEmptyScene)
 			assert(false && "씬리스트가 비어있습니다!, 초기씬 로드에 실패했습니다!");
 		else
+		{
 			CreateEmptyScene();
+			m_sceneNameToID[m_scenes.back()->GetName()] = 0;
+			m_nextSceneID = 0;
+			return;
+		}
 	}
 
-	m_nextSceneID = 0;
+	m_nextSceneID = startSceneIDX;
 }
 
 

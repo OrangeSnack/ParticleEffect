@@ -14,6 +14,7 @@
 using namespace MMMEngine::EditorRegistry;
 using namespace MMMEngine::Utility;
 
+#include "StartUpProjectWindow.h"
 #include "SceneListWindow.h"
 #include "HierarchyWindow.h"
 #include "InspectorWindow.h"
@@ -225,6 +226,7 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
     window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
+
     // 4. 배경 창 시작
     bool p_open = true;
     ImGui::Begin("MyMainDockSpaceWindow", &p_open, window_flags);
@@ -243,7 +245,6 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     {
         if (ImGui::BeginMenu(u8"파일"))
         {
-            if (ImGui::MenuItem(u8"끝내기")) p_open = false;
             if (ImGui::MenuItem(u8"씬 관리"))
             {
                 g_editor_window_scenelist = true;
@@ -253,7 +254,9 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
             {
                 auto sceneRef = SceneManager::Get().GetCurrentScene();
                 auto sceneRaw = SceneManager::Get().GetSceneRaw(sceneRef);
+
                 SceneSerializer::Get().Serialize(*sceneRaw, SceneManager::Get().GetSceneListPath() + L"/" + StringHelper::StringToWString(sceneRaw->GetName()) + L".scene");
+                SceneSerializer::Get().ExtractScenesList(SceneManager::Get().GetAllSceneToRaw(), SceneManager::Get().GetSceneListPath());
                 p_open = false;
             }
 
@@ -270,6 +273,12 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
 
     ImGui::End(); // MyMainDockSpaceWindow 종료
 
+    if (!g_editor_project_loaded)
+    {
+        StartUpProjectWindow::Get().Render();
+        return;
+    }
+
     auto& style = ImGui::GetStyle();
 
     style.FrameRounding = 6.0f;
@@ -277,6 +286,9 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     style.GrabRounding = 6.0f;
     style.ScrollbarRounding = 6.0f;
     style.WindowMenuButtonPosition = ImGuiDir_None;
+
+
+       
 
     SceneListWindow::Get().Render();
     HierarchyWindow::Get().Render();

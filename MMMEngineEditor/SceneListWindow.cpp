@@ -291,8 +291,11 @@ bool ApplySceneListChanges()
     g_hasChanges = false;
 
     // TODO: SceneManager 적용
+    auto sceneRef = SceneManager::Get().GetCurrentScene();
+    auto sceneRaw = SceneManager::Get().GetSceneRaw(sceneRef);
+    SceneSerializer::Get().Serialize(*sceneRaw, SceneManager::Get().GetSceneListPath() + L"/" + StringHelper::StringToWString(sceneRaw->GetName()) + L".scene");
     SceneManager::Get().UpdateAndReloadScenes(enabledScenes);
-    SceneSerializer::Get().ExtractScenes(SceneManager::Get().GetAllSceneToRaw(), SceneManager::Get().GetSceneListPath());
+    SceneSerializer::Get().ExtractScenesList(SceneManager::Get().GetAllSceneToRaw(), SceneManager::Get().GetSceneListPath());
     return true; // 성공
 }
 

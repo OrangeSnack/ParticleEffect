@@ -7,6 +7,8 @@
 #include "SceneManager.h"
 #include <cmath>
 
+uint64_t MMMEngine::GameObject::s_go_instanceID = 0;
+
 RTTR_REGISTRATION
 {
 	using namespace rttr;
@@ -87,6 +89,14 @@ void MMMEngine::GameObject::UpdateActiveInHierarchy()
 
 MMMEngine::GameObject::GameObject() 
 {
+	std::string duplicateNum = "";
+	if (s_go_instanceID > 0)
+	{
+		duplicateNum = "(" + std::to_string(s_go_instanceID) + ")";
+	}
+
+	SetName("GameObject" + duplicateNum);
+	s_go_instanceID++;
 }
 
 
@@ -97,6 +107,14 @@ MMMEngine::GameObject::GameObject(std::string name)
 
 MMMEngine::GameObject::GameObject(SceneRef scene)
 {
+	std::string duplicateNum = "";
+	if (s_go_instanceID > 0)
+	{
+		duplicateNum = "(" + std::to_string(s_go_instanceID) + ")";
+	}
+
+	SetName("GameObject" + duplicateNum);
+	s_go_instanceID++;
 	m_scene = scene;
 }
 

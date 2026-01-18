@@ -103,6 +103,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)MMMEngineShared\rttr\..;$(SolutionDir)MMMEngineShared\dxtk\Inc;$(SolutionDir)MMMEngineShared\dxtk;$(SolutionDir)MMMEngineShared;$(ProjectDir)imgui-docking\;$(ProjectDir)imgui-docking\backends</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -118,6 +119,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)MMMEngineShared\rttr\..;$(SolutionDir)MMMEngineShared\dxtk\Inc;$(SolutionDir)MMMEngineShared\dxtk;$(SolutionDir)MMMEngineShared;$(ProjectDir)imgui-docking\;$(ProjectDir)imgui-docking\backends</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +130,9 @@
     <ProjectReference Include="..\MMMEngineShared\MMMEngineShared.vcxproj">
       <Project>{454319e7-4ace-4099-8e65-570c30e379a3}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ss.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

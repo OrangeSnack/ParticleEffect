@@ -24,7 +24,7 @@ namespace MMMEngine
 		std::unique_ptr<Scene> m_dontDestroyOnLoadScene;
 
 		// todo : json 메세지팩으로 to index, scene snapshot을 Scene생성하면서 로드시키기
-		void LoadScenes(); 
+		void LoadScenes(bool allowEmptyScene);
 		void CreateEmptyScene(std::string name = "EmptyScene");
 
 		void UpdateScenesHash(std::unordered_map<std::string, size_t>&& nameToID) noexcept;
@@ -51,7 +51,7 @@ namespace MMMEngine
 		void ChangeScene(const std::string& name);
 		void ChangeScene(const size_t& id);
 
-		void StartUp(std::wstring sceneListPath, bool allowEmptyScene = false);
+		void StartUp(std::wstring sceneListPath, size_t startSceneIDX, bool allowEmptyScene = false);
 
 		void ShutDown();
 		bool CheckSceneIsChanged();

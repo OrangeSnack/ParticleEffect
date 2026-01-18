@@ -51,9 +51,6 @@
     <ClInclude Include="EditorRegistry.h">
       <Filter>헤더 파일\EditorRegistry</Filter>
     </ClInclude>
-    <ClInclude Include="ProjectManager.h">
-      <Filter>헤더 파일\Project</Filter>
-    </ClInclude>
     <ClInclude Include="Project.h">
       <Filter>헤더 파일\Project</Filter>
     </ClInclude>
@@ -99,6 +96,12 @@
     <ClInclude Include="DragAndDrop.h">
       <Filter>헤더 파일\EditorWindow\ForEditorContext</Filter>
     </ClInclude>
+    <ClInclude Include="ProjectManager.h">
+      <Filter>헤더 파일\Project</Filter>
+    </ClInclude>
+    <ClInclude Include="StartUpProjectWindow.h">
+      <Filter>헤더 파일\EditorWindow</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -138,6 +141,12 @@
       <Filter>소스 파일\EditorWIndow</Filter>
     </ClCompile>
     <ClCompile Include="SceneListWindow.cpp">
+      <Filter>소스 파일\EditorWIndow</Filter>
+    </ClCompile>
+    <ClCompile Include="ProjectManager.cpp">
+      <Filter>소스 파일\Project</Filter>
+    </ClCompile>
+    <ClCompile Include="StartUpProjectWindow.cpp">
       <Filter>소스 파일\EditorWIndow</Filter>
     </ClCompile>
   </ItemGroup>

@@ -525,7 +525,7 @@ void MMMEngine::SceneSerializer::SerializeToMemory(const Scene& scene, SnapShot&
 /// </summary>
 /// <param name="scenes"></param>
 /// <param name="rootPath"></param>
-void MMMEngine::SceneSerializer::ExtractScenes(const std::vector<Scene*>& scenes,
+void MMMEngine::SceneSerializer::ExtractScenesList(const std::vector<Scene*>& scenes,
     const std::wstring& rootPath)
 {
     namespace fs = std::filesystem;
@@ -546,11 +546,6 @@ void MMMEngine::SceneSerializer::ExtractScenes(const std::vector<Scene*>& scenes
         sceneEntry["index"] = i;
         sceneEntry["filepath"] = sceneFileName; // 리스트에는 상대경로(파일명)만 저장
         sceneListJson.push_back(sceneEntry);
-
-        // rootpath/custom1.scene
-        fs::path sceneFullPath = root / fs::path(sceneFileName);
-
-        Serialize(*scene, sceneFullPath.wstring());
     }
 
     // rootpath/sceneList.bin
