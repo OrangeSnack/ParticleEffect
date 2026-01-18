@@ -1,6 +1,8 @@
 #pragma once
+
 #include "Singleton.hpp"
 #include "Project.h"
+
 #include <optional>
 #include <filesystem>
 
@@ -19,7 +21,8 @@ namespace MMMEngine::Editor
         bool OpenProject(const std::filesystem::path& projectFile);
         bool CreateNewProject(const std::filesystem::path& projectRootDir);
 
-        std::optional<std::filesystem::path> SaveActiveProject(); // 저장 경로는 projectRoot/ProjectSettings/project.json 등으로 고정 추천
+        // 저장 경로: projectRoot/ProjectSettings/project.json
+        std::optional<std::filesystem::path> SaveActiveProject();
 
     private:
         std::optional<Project> m_project;
@@ -28,8 +31,12 @@ namespace MMMEngine::Editor
         std::filesystem::path GetProjectFilePath(const std::filesystem::path& root) const;
         void EnsureProjectFolders(const std::filesystem::path& root) const;
 
-        // template generation
-        bool GenerateUserScriptsSolution(const std::filesystem::path& projectRootDir) const;
+        // UserScripts generation (NO VS template copy)
+        bool GenerateUserScriptsProject(const std::filesystem::path& projectRootDir) const;
 
+        void EnsureUserScriptsFolders(const std::filesystem::path& projectRootDir) const;
+        bool GenerateUserScriptsVcxproj(const std::filesystem::path& projectRootDir) const;
+        bool GenerateUserScriptsFilters(const std::filesystem::path& projectRootDir) const; // 선택(있으면 VS에서 보기 좋음)
+        void GenerateDefaultScriptIfEmpty(const std::filesystem::path& projectRootDir) const;
     };
 }

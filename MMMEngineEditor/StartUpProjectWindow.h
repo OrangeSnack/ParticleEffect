@@ -19,7 +19,11 @@ namespace MMMEngine::Editor
         bool m_openErrorPopup = false;
         std::string m_errorMsg;
 
+        std::wstring m_pendingCreateRoot; // 템플릿 설정 후 재시도할 루트
+
         void ShowError(const char* msg);
         void RenderErrorPopup();
+        void RenderMissingEngineDirPopup();
+        bool m_openMissingEngineDirPopup = false;
     };
 }

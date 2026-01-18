@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <shobjidl.h>   // IFileDialog
 #include <filesystem>
+#include <cstdlib>
 
 #pragma comment(lib, "Ole32.lib")
 
@@ -110,10 +111,70 @@ namespace
         if (didInit) CoUninitialize();
         return !outFolder.empty();
     }
+
+    static bool HasEngineDir()
+    {
+        const char* engineDir = std::getenv("MMMENGINE_DIR");
+        return (engineDir != nullptr && engineDir[0] != '\0');
+    }
 }
 
 namespace MMMEngine::Editor
 {
+    void StartUpProjectWindow::RenderMissingEngineDirPopup()
+    {
+        if (m_openMissingEngineDirPopup)
+        {
+            ImGui::OpenPopup(u8"엔진 경로 설정 필요");
+            m_openMissingEngineDirPopup = false;
+        }
+
+        if (ImGui::BeginPopupModal(u8"엔진 경로 설정 필요", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::TextWrapped(u8"프로젝트 생성을 위해 엔진 경로 환경변수가 필요합니다.\n"
+                u8"환경 변수를 설정한 후 에디터를 재시작해주세요.");
+            ImGui::Separator();
+
+            ImGui::TextWrapped(u8"환경 변수 이름:");
+            {
+                char buf[256]{};
+                strncpy_s(buf, "MMMENGINE_DIR", _TRUNCATE);
+                ImGui::InputText("##envname", buf, sizeof(buf),
+                    ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_AutoSelectAll);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"복사##envname"))
+                ImGui::SetClipboardText("MMMENGINE_DIR");
+
+            ImGui::Spacing();
+
+            ImGui::TextWrapped(u8"예시 값 (엔진 루트 경로):");
+            {
+                char buf[256]{};
+                strncpy_s(buf, "D:/Dev/MMMEngine", _TRUNCATE);
+                ImGui::InputText("##envexample", buf, sizeof(buf),
+                    ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_AutoSelectAll);
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"복사##envexample"))
+                ImGui::SetClipboardText("D:/Dev/MMMEngine");
+
+            ImGui::Spacing();
+            ImGui::TextDisabled(u8"참고: EngineShared/Include, EngineShared/Lib/Win64가 있는 경로");
+
+            ImGui::Spacing();
+
+            auto hbuttonsize = ImVec2{ ImGui::GetContentRegionAvail().x / 2 - ImGui::GetStyle().ItemSpacing.x / 2, 0 };
+
+            auto currentCursorX = ImGui::GetCursorPosX();
+            ImGui::SetCursorPosX(currentCursorX + (hbuttonsize.x / 2));
+            if (ImGui::Button(u8"닫기", hbuttonsize))
+                ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+    }
+
     void StartUpProjectWindow::ShowError(const char* msg)
     {
         m_errorMsg = msg ? msg : "";
@@ -122,7 +183,6 @@ namespace MMMEngine::Editor
 
     void StartUpProjectWindow::RenderErrorPopup()
     {
-        // 팝업은 "다음 프레임에" 여는 패턴
         if (m_openErrorPopup)
         {
             ImGui::OpenPopup(u8"Project Load Error");
@@ -167,7 +227,6 @@ namespace MMMEngine::Editor
             }
             else
             {
-                // OpenProject는 유효한 json이 아니면 false 반환하도록 (예외 처리/검증 포함)
                 fs::path p = fs::path(m_selectedProjectFile);
 
                 if (ProjectManager::Get().OpenProject(p))
@@ -178,7 +237,6 @@ namespace MMMEngine::Editor
                 {
                     ShowError(u8"프로젝트 파일을 읽을 수 없습니다.\n"
                         "파일이 존재하는지, JSON 형식이 올바른지 확인하세요.");
-                    // StartupWindow는 계속 렌더링되므로 '돌아가기' 처리는 별도 필요 없음
                 }
             }
         }
@@ -195,16 +253,22 @@ namespace MMMEngine::Editor
             }
             else
             {
-                fs::path root = fs::path(m_selectedProjectRoot);
-
-                if (ProjectManager::Get().CreateNewProject(root))
+                // 환경변수 체크
+                if (!HasEngineDir())
                 {
-                    EditorRegistry::g_editor_project_loaded = true;
+                    m_openMissingEngineDirPopup = true;
                 }
                 else
                 {
-                    ShowError(u8"새 프로젝트 생성에 실패했습니다.\n"
-                        "폴더 권한/경로를 확인하고 다시 시도하세요.");
+                    fs::path root = fs::path(m_selectedProjectRoot);
+                    if (ProjectManager::Get().CreateNewProject(root))
+                    {
+                        EditorRegistry::g_editor_project_loaded = true;
+                    }
+                    else
+                    {
+                        ShowError(u8"새 프로젝트 생성에 실패했습니다.\n폴더 권한/경로를 확인하고 다시 시도하세요.");
+                    }
                 }
             }
         }
@@ -214,6 +278,7 @@ namespace MMMEngine::Editor
 
         // 팝업은 End 전에 호출
         RenderErrorPopup();
+        RenderMissingEngineDirPopup();
 
         ImGui::End();
     }
