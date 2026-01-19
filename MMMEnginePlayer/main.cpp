@@ -21,7 +21,7 @@ void Initialize()
 	InputManager::Get().StartUp(GlobalRegistry::g_pApp->GetWindowHandle());
 	GlobalRegistry::g_pApp->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
 
-	SceneManager::Get().StartUp(L"Data", false);
+	SceneManager::Get().StartUp(L"Data", 0, false);
 	BehaviourManager::Get().StartUp();
 }
 
