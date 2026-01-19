@@ -10,6 +10,7 @@
 #include <filesystem>
 #include "ResourceManager.h"
 
+#include "json/json.hpp"
 
 namespace MMMEngine {
 	using PropertyValue = std::variant<

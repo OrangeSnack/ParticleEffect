@@ -10,12 +10,14 @@
 #include "json/json.hpp"
 
 #include <rttr/registration>
+#include "MaterialSerealizer.h"
 
 #pragma comment (lib, "DirectXTex.lib")
 #pragma comment (lib, "DirectXTK.lib")
 
 namespace fs = std::filesystem;
 namespace mw = Microsoft::WRL;
+using json = nlohmann::json;
 
 RTTR_REGISTRATION
 {
@@ -72,23 +74,14 @@ MMMEngine::ResPtr<MMMEngine::PShader> MMMEngine::Material::GetPShader() const
 
 void MMMEngine::Material::LoadTexture(const std::wstring& _propertyName, const std::wstring& _filePath)
 {
-	/*auto texture = ResourceManager::Get().Load<Texture2D>(_filePath);
+	auto texture = ResourceManager::Get().Load<Texture2D>(_filePath);
 
-	fs::path fPath(_filePath);
-
-	mw::ComPtr<ID3D11ShaderResourceView> srv;
-	CreateResourceView(fPath, srv.GetAddressOf());
-
-	if (srv) {
-		srv.As(&texture->m_pSRV);
-	}
-
-	SetProperty(_propertyName, texture);*/
+	SetProperty(_propertyName, texture);
 }
 
 bool MMMEngine::Material::LoadFromFilePath(const std::wstring& _filePath)
 {
-	nlohmann::json m_snapShot;
+	MaterialSerealizer::Get().UnSerealize(this, _filePath);
 
 	return true;
 }

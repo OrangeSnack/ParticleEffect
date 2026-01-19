@@ -61,6 +61,6 @@ bool MMMEngine::Texture2D::LoadFromFilePath(const std::wstring& filePath)
 		srv.As(&m_pSRV);
 		return true;
 	}
-	else
-		return false;
+
+	return false;
 }
