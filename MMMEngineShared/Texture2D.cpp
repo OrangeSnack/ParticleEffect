@@ -6,8 +6,18 @@
 #include <RendererTools.h>
 #include <WICTextureLoader.h>
 
+#include <rttr/registration>
+
 namespace WRL = Microsoft::WRL;
 namespace fs = std::filesystem;
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+
+	registration::class_<MMMEngine::ResPtr<MMMEngine::Texture2D>>("Texture2D")
+		.property_readonly("GetFilePath",& MMMEngine::Texture2D::GetFilePath);
+}
 
 // SRV 만들어주는 함수
 void MMMEngine::Texture2D::CreateResourceView(std::filesystem::path& _path, ID3D11ShaderResourceView** _out)
@@ -49,5 +59,8 @@ bool MMMEngine::Texture2D::LoadFromFilePath(const std::wstring& filePath)
 
 	if (srv) {
 		srv.As(&m_pSRV);
+		return true;
 	}
+	else
+		return false;
 }

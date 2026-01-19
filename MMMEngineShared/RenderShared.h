@@ -1,4 +1,9 @@
 #pragma once
+
+#ifndef NOMINMAX
+	#define NOMINMAX
+#endif
+
 #include <SimpleMath.h>
 #include <memory>
 #include <Material.h>
@@ -69,9 +74,4 @@ struct MeshGPU {
 struct MeshMatGroup {
 	UINT materialIdx = 0;		// 메테리얼 인덱스
 	std::vector<UINT> meshIdx;	// 메테리얼에 소속된 메시들 인덱스
-};
-
-struct MaterialInfo {
-	std::vector<std::pair<std::wstring, std::wstring>> texProperties;	// propertyName, path
-	std::
 };

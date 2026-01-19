@@ -6,15 +6,15 @@
 namespace MMMEngine {
 	class MMMENGINE_API MeshRenderer : public Behaviour
 	{
-		// GPU 버퍼
-		std::shared_ptr<StaticMesh> mesh = nullptr;
-		std::vector<std::weak_ptr<Renderer>> renderers;
+		//// GPU 버퍼
+		//std::shared_ptr<StaticMesh> mesh = nullptr;
+		//std::vector<std::weak_ptr<Renderer>> renderers;
 
-		void SetMesh(std::shared_ptr<StaticMesh>& _mesh);
-		void Start() override;
-		void Update() override;
+		//void SetMesh(std::shared_ptr<StaticMesh>& _mesh);
+		//void Start() override;
+		//void Update() override;
 
-		~MeshRenderer();
+		//~MeshRenderer();
 	};
 }
 

@@ -12,24 +12,24 @@ DEFINE_SINGLETON(MMMEngine::RenderManager)
 using namespace Microsoft::WRL;
 
 namespace MMMEngine {
-    void RenderManager::Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight)
-    {
-        // 디바이스 생성
-        ComPtr<ID3D11Device> device;
-        D3D_FEATURE_LEVEL featureLevel;
-        D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL,
-            0, nullptr, 0, D3D11_SDK_VERSION,
-            device.GetAddressOf(), &featureLevel, nullptr);
+	void RenderManager::Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight)
+	{
+		// 디바이스 생성
+		ComPtr<ID3D11Device> device;
+		D3D_FEATURE_LEVEL featureLevel;
+		D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, NULL,
+			0, nullptr, 0, D3D11_SDK_VERSION,
+			device.GetAddressOf(), &featureLevel, nullptr);
 
-        HR_T(device.As(&m_pDevice));
+		HR_T(device.As(&m_pDevice));
 
-        // hWnd 등록
-        assert(_hwnd != nullptr && "RenderPipe::Initialize : hWnd must not be nullptr!!");
-        m_pHwnd = _hwnd;
+		// hWnd 등록
+		assert(_hwnd != nullptr && "RenderPipe::Initialize : hWnd must not be nullptr!!");
+		m_pHwnd = _hwnd;
 
-        // 클라이언트 사이즈 등록
-        m_rClientWidth = _ClientWidth;
-        m_rClientHeight = _ClientHeight;
+		// 클라이언트 사이즈 등록
+		m_rClientWidth = _ClientWidth;
+		m_rClientHeight = _ClientHeight;
 
 		// 카메라 생성
 		// WARNING::오브젝트 생성!!
@@ -37,21 +37,21 @@ namespace MMMEngine {
 		auto camera = ObjectManager::Get().NewObject<GameObject>("EditorCamera");
 		m_pCamera = camera->AddComponent<EditorCamera>();
 
-        // 인스턴스 초기화 뭉탱이
-        this->InitD3D();
-        this->Start();
-    }
-    void RenderManager::InitD3D()
-    {
-        // 스왑체인 속성설정 생성
-        DXGI_SWAP_CHAIN_DESC1 swapDesc = {};
-        swapDesc.BufferCount = 1;
-        swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        swapDesc.Width = m_rClientWidth;
-        swapDesc.Height = m_rClientHeight;
-        swapDesc.SampleDesc.Count = 1;		// MSAA
-        swapDesc.SampleDesc.Quality = 0;	// MSAA 품질수준
+		// 인스턴스 초기화 뭉탱이
+		this->InitD3D();
+		this->Start();
+	}
+	void RenderManager::InitD3D()
+	{
+		// 스왑체인 속성설정 생성
+		DXGI_SWAP_CHAIN_DESC1 swapDesc = {};
+		swapDesc.BufferCount = 1;
+		swapDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+		swapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		swapDesc.Width = m_rClientWidth;
+		swapDesc.Height = m_rClientHeight;
+		swapDesc.SampleDesc.Count = 1;		// MSAA
+		swapDesc.SampleDesc.Quality = 0;	// MSAA 품질수준
 
 		UINT creationFlag = 0;
 
@@ -145,26 +145,26 @@ namespace MMMEngine {
 		rsDesc.AntialiasedLineEnable = FALSE;
 		HR_T(m_pDevice->CreateRasterizerState2(&rsDesc, m_pDefaultRS.GetAddressOf()));
 		assert(m_pDefaultRS && "RenderPipe::InitD3D : defaultRS not initialized!!");
-    }
-    void RenderManager::UnInitD3D()
-    {
-    }
-    void RenderManager::Start()
-    {
-        // 버퍼 기본색상
-        m_ClearColor = DirectX::SimpleMath::Vector4(0.45f, 0.55f, 0.60f, 1.00f);
+	}
+	void RenderManager::UnInitD3D()
+	{
+	}
+	void RenderManager::Start()
+	{
+		// 버퍼 기본색상
+		m_ClearColor = DirectX::SimpleMath::Vector4(0.45f, 0.55f, 0.60f, 1.00f);
 
-        m_pCamera->GetViewMatrix(m_camMat.mView);
-        m_camMat.mProjection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, m_rClientWidth / (FLOAT)m_rClientHeight, 0.01f, 100.0f);
+		m_pCamera->GetViewMatrix(m_camMat.mView);
+		m_camMat.mProjection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, m_rClientWidth / (FLOAT)m_rClientHeight, 0.01f, 100.0f);
 
-        // 캠 버퍼 생성
-        D3D11_BUFFER_DESC bd = {};
-        bd.Usage = D3D11_USAGE_DEFAULT;
-        bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        bd.CPUAccessFlags = 0;
+		// 캠 버퍼 생성
+		D3D11_BUFFER_DESC bd = {};
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.CPUAccessFlags = 0;
 
-        bd.ByteWidth = sizeof(Render_CamBuffer);
-        HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCambuffer.GetAddressOf()));
+		bd.ByteWidth = sizeof(Render_CamBuffer);
+		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCambuffer.GetAddressOf()));
 
 		// 기본 VSShader 생성 (VS 쉐이더는 매크로 넣지않는 이상 스킨드매쉬 쉐이더가 아님)
 		m_pDefaultVSShader = ResourceManager::Get().Load<VShader>(L"Shader/PBR/VS/SkeletalVertexShader.hlsl");
@@ -179,7 +179,7 @@ namespace MMMEngine {
 	}
 
 	void RenderManager::Render()
-    {
+	{
 		// Clear
 		m_pDeviceContext->ClearRenderTargetView(m_pRenderTargetView.Get(), m_backColor);
 		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -209,15 +209,11 @@ namespace MMMEngine {
 				renderer->Render();
 			}
 		}
-    }
+	}
 
 	void RenderManager::EndFrame()
 	{
 		// Present our back buffer to our front buffer
 		m_pSwapChain->Present(0, 0);
 	}
-
-void MMMEngine::RenderManager::EndFrame()
-{
-	m_swapChain->Present(m_syncInterval, 0);
 }

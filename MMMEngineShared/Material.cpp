@@ -9,11 +9,27 @@
 #include <RendererTools.h>
 #include "json/json.hpp"
 
+#include <rttr/registration>
+
 #pragma comment (lib, "DirectXTex.lib")
 #pragma comment (lib, "DirectXTK.lib")
 
 namespace fs = std::filesystem;
 namespace mw = Microsoft::WRL;
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+
+	registration::class_<MMMEngine::Material>("Material")
+		.property("name", &MMMEngine::Material::GetName, &MMMEngine::Material::SetName)
+		.property("VShader", &MMMEngine::Material::GetVShader)
+		.property("PShader", &MMMEngine::Material::GetPShader)
+		.property("properties", &MMMEngine::Material::GetProperties)
+		.method("GetProperty", &MMMEngine::Material::GetProperty)
+		.method("SetProperty", &MMMEngine::Material::SetProperty);
+}
+
 
 // 프로퍼티 설정
 void MMMEngine::Material::SetProperty(const std::wstring& name, const MMMEngine::PropertyValue& value)
@@ -74,5 +90,5 @@ bool MMMEngine::Material::LoadFromFilePath(const std::wstring& _filePath)
 {
 	nlohmann::json m_snapShot;
 
-
+	return true;
 }
