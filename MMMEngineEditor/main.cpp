@@ -1,3 +1,14 @@
+#define NOMINMAX
+#include <iostream>
+#include <filesystem>
+
+#include "GlobalRegistry.h"
+#include "EditorRegistry.h"
+#include "App.h"
+
+#include "InputManager.h"
+#include "ResourceManager.h"
+#include "TimeManager.h"
 #include "RenderManager.h"
 #include "BehaviourManager.h"
 #include "SceneManager.h"
@@ -6,12 +17,17 @@
 
 #include "StringHelper.h"
 #include "ImGuiEditorContext.h"
+#include "BuildManager.h"
+#include "DLLHotLoadHelper.h"
 
+namespace fs = std::filesystem;
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
+using namespace MMMEngine::Editor;
 
-void Init()
+void Initialize()
 {
+	SetConsoleOutputCP(CP_UTF8);
 	auto app = GlobalRegistry::g_pApp;
 	auto hwnd = app->GetWindowHandle();
 	auto windowInfo = app->GetWindowInfo();
@@ -21,18 +37,18 @@ void Init()
 	
 	TimeManager::Get().StartUp();
 
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ì¼± È®ï¿½ï¿½
+	// ÀÌÀü¿¡ Ä×´ø ÇÁ·ÎÁ§Æ® ¿ì¼± È®ÀÎ
 	EditorRegistry::g_editor_project_loaded = ProjectManager::Get().Boot();
 	if (EditorRegistry::g_editor_project_loaded)
 	{
-		// ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸Æ®
+		// Á¸ÀçÇÏ´Â °æ¿ì ¾ÀÀ» Ã³À½À¸·Î ½ºÅ¸Æ®
 		auto currentProject = ProjectManager::Get().GetActiveProject();
 		SceneManager::Get().StartUp(currentProject.ProjectRootFS().generic_wstring() + L"/Assets/Scenes", currentProject.lastSceneIndex, true);
 		app->SetWindowTitle(L"MMMEditor [ " + Utility::StringHelper::StringToWString(currentProject.rootPath) + L" ]");
+		ObjectManager::Get().StartUp();
+		BehaviourManager::Get().StartUp(currentProject.rootPath + "/UserScripts.dll");
+		BuildManager::Get().SetProgressCallbackString([](const std::string& progress) { std::cout << progress.c_str() << std::endl; });
 	}
-
-	ObjectManager::Get().StartUp();
-	BehaviourManager::Get().StartUp();
 
 	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
 	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeScreen>(&RenderManager::Get());
@@ -58,18 +74,79 @@ void Update_ProjectNotLoaded()
 		auto currentProject = ProjectManager::Get().GetActiveProject();
 		SceneManager::Get().StartUp(currentProject.ProjectRootFS().generic_wstring() + L"/Assets/Scenes", 0, true);
 		GlobalRegistry::g_pApp->SetWindowTitle(L"MMMEditor [ " + Utility::StringHelper::StringToWString(currentProject.rootPath) + L" ]");
+
+		ObjectManager::Get().StartUp();
+		BehaviourManager::Get().StartUp(currentProject.rootPath + "/UserScripts.dll");
+
+		BuildManager::Get().SetProgressCallbackString([](const std::string& progress) { std::cout << progress << std::endl; });
 		return;
 	}
 }
 
 void Update()
 {
+	if (!EditorRegistry::g_editor_project_loaded)
+	{
+		Update_ProjectNotLoaded();
+		return;
+	}
+
+	TimeManager::Get().BeginFrame();
 	InputManager::Get().Update();
+
+	float dt = TimeManager::Get().GetDeltaTime();
+	if (SceneManager::Get().CheckSceneIsChanged())
+	{
+		ObjectManager::Get().UpdateInternalTimer(dt);
+		BehaviourManager::Get().DisableBehaviours();
+		ObjectManager::Get().ProcessPendingDestroy();
+		BehaviourManager::Get().AllSortBehaviours();
+		BehaviourManager::Get().AllBroadCastBehaviourMessage("OnSceneLoaded");
+	}
+
+	if (EditorRegistry::g_editor_scene_playing)
+	{
+		BehaviourManager::Get().InitializeBehaviours();
+	}
+
+	TimeManager::Get().ConsumeFixedSteps([&](float fixedDt)
+		{
+			if (!EditorRegistry::g_editor_scene_playing)
+				return;
+
+			//PhysicsManager::Get()->PreSyncPhysicsWorld();
+			//PhysicsManager::Get()->PreApplyTransform();
+			BehaviourManager::Get().BroadCastBehaviourMessage("FixedUpdate");
+			//PhysicsManager::Get()->Simulate(fixedDt);
+			//PhysicsManager::Get()->ApplyTransform();
+		});
+
+	RenderManager::Get().BeginFrame();
+	RenderManager::Get().Render();
+	ImGuiEditorContext::Get().BeginFrame();
+	ImGuiEditorContext::Get().Render();
+	ImGuiEditorContext::Get().EndFrame();
+	RenderManager::Get().EndFrame();
+
+	ObjectManager::Get().UpdateInternalTimer(dt);
+	BehaviourManager::Get().DisableBehaviours();
+	ObjectManager::Get().ProcessPendingDestroy();
 }
 
 void Release()
 {
 	GlobalRegistry::g_pApp = nullptr;
+	ImGuiEditorContext::Get().Uninitialize();
+	RenderManager::Get().ShutDown();
+	TimeManager::Get().ShutDown();
+	InputManager::Get().ShutDown();
+
+	SceneManager::Get().ShutDown();
+	ObjectManager::Get().ShutDown();
+	BehaviourManager::Get().ShutDown();
+
+	fs::path cwd = fs::current_path();
+	DLLHotLoadHelper::CleanupHotReloadCopies(cwd);
 }
 
 int main()
@@ -77,7 +154,8 @@ int main()
 	App app{ L"MMMEditor",1600,900 };
 	GlobalRegistry::g_pApp = &app;
 
-	app.OnInitialize.AddListener<&Init>();
+	app.OnInitialize.AddListener<&Initialize>();
 	app.OnUpdate.AddListener<&Update>();
+	app.OnRelease.AddListener<&Release>();
 	app.Run();
 }

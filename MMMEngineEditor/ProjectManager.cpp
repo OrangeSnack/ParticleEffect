@@ -253,9 +253,11 @@ void MMMEngine::ExampleBehaviour::Update()
 
         // fallback
         std::string engineSharedInclude = R"($(ProjectDir)..\..\..\MMMEngineShared)";
+        std::string engineSharedIncludeDXTk = R"($(ProjectDir)..\..\..\MMMEngineShared\dxtk)";
+        std::string engineSharedIncludeDXTkInc = R"($(ProjectDir)..\..\..\MMMEngineShared\dxtk\inc)";
         std::string engineSharedDebugLibDir = R"($(ProjectDir)..\..\..\X64\Debug)";
         std::string engineSharedReleaseLibDir = R"($(ProjectDir)..\..\..\X64\Release)";
-        std::string engineSharedLibName = "EngineShared.lib";
+        std::string engineSharedLibName = "MMMEngineShared.lib";
 
         if (!engineDir.empty())
         {
@@ -339,10 +341,10 @@ void MMMEngine::ExampleBehaviour::Update()
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <ConformanceMode>true</ConformanceMode>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;USERSCRIPTS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>)xml" << engineSharedInclude << R"xml(;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ConformanceMode>false</ConformanceMode>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;MMMENGINE_EXPORTS;RTTR_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>)xml" << engineSharedInclude << R"xml(;)xml" << engineSharedIncludeDXTk << R"xml(;)xml" << engineSharedIncludeDXTkInc << R"xml(;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -354,12 +356,12 @@ void MMMEngine::ExampleBehaviour::Update()
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <ConformanceMode>false</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;USERSCRIPTS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>)xml" << engineSharedInclude << R"xml(;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;MMMENGINE_EXPORTS;RTTR_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>)xml" << engineSharedInclude << R"xml(;)xml" << engineSharedIncludeDXTk << R"xml(;)xml" << engineSharedIncludeDXTkInc << R"xml(;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
