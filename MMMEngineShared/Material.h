@@ -11,6 +11,7 @@
 #include "ResourceManager.h"
 
 #include "json/json.hpp"
+#include "rttr/type"
 
 namespace MMMEngine {
 	using PropertyValue = std::variant<
@@ -20,20 +21,21 @@ namespace MMMEngine {
 
 	class PShader;
 	class VShader;
-	class MaterialSerealizer;
+	class MaterialSerializer;
 	class MMMENGINE_API Material : public Resource
 	{
-		friend class MaterialSerealizer;
+		friend class MaterialSerializer;
+		RTTR_ENABLE(Resource);
+		RTTR_REGISTRATION_FRIEND
+			friend class ResourceManager;
+			friend class SceneManager;
+			friend class Scene;
 	private:
 		std::unordered_map<std::wstring, PropertyValue> m_properties;
 		ResPtr<VShader> m_pVShader;
 		ResPtr<PShader> m_pPShader;
 
-		std::wstring name = L"Material";
-
 	public:
-		std::wstring GetName() const { return name; }
-		void SetName(std::wstring _name) { name = _name; }
 
 		void SetProperty(const std::wstring& _name, const PropertyValue& value);
 		PropertyValue GetProperty(const std::wstring& name) const;

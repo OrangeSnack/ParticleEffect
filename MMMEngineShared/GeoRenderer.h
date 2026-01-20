@@ -8,7 +8,7 @@ namespace MMMEngine {
 	private:
 
 	public:
-
+		void Render() override;
 	};
 }
 

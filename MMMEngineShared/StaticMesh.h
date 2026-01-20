@@ -6,19 +6,26 @@
 namespace MMMEngine {
 	class MMMENGINE_API StaticMesh : public Resource
 	{
+		RTTR_ENABLE(Resource);
+		RTTR_REGISTRATION_FRIEND
+			friend class ResourceManager;
+			friend class SceneManager;
+			friend class Scene;
 	public:
 		// 메시 데이터
-		std::shared_ptr<MeshData> meshData;
+		MeshData meshData;
 		// GPU 버퍼
-		std::shared_ptr<MeshGPU> gpuBuffer;
+		MeshGPU gpuBuffer;
+		// 메테리얼
+		std::vector<ResPtr<Material>> materials;
 		// 메시 그룹 <MatIdx, MeshIdx>
 		std::unordered_map<UINT, std::vector<UINT>> meshGroupData;
 
 		bool castShadows = true;
 		bool receiveShadows = true;
 
-		// TODO::직렬화 시켜야함
-		bool LoadFromFilePath(std::wstring _filePath);
+		// TODO::직렬화 시켜야함, 이거할때 버퍼를 만들어야함(그리고 meshData를 비움)
+		bool LoadFromFilePath(const std::wstring& filePath) override;
 	};
 }
 

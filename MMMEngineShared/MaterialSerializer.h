@@ -8,14 +8,14 @@
 #include <rttr/type>
 
 namespace MMMEngine {
-	class MMMENGINE_API MaterialSerealizer : public Utility::ExportSingleton<MaterialSerealizer>
+	class MMMENGINE_API MaterialSerializer : public Utility::ExportSingleton<MaterialSerializer>
 	{
 	private:
 		PropertyValue property_from_json(const nlohmann::json& j);
 		void to_json(nlohmann::json& j, const MMMEngine::PropertyValue& value);
 	public:
-		void Serealize(Material* _material, std::wstring _path);		// _path는 출력path
-		void UnSerealize(Material* _material, std::wstring _path);	// _path는 입력path
+		void Serealize(Material* _in, std::wstring _path);		// _path는 출력path
+		void UnSerealize(Material* _out, std::wstring _path);		// _path는 입력path
 	};
 }
 

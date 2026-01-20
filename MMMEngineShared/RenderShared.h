@@ -7,7 +7,6 @@
 #include <SimpleMath.h>
 #include <memory>
 #include <Material.h>
-#include <RenderManager.h>
 
 #define BONE_MAXSIZE 256
 
@@ -53,19 +52,23 @@ namespace MMMEngine {
 		DirectX::SimpleMath::Vector3 Normal;	// 노멀
 		DirectX::SimpleMath::Vector3 Tangent;	// 탄젠트
 		DirectX::SimpleMath::Vector2 UV;		// 텍스쳐 UV
-		int boneIndices[4] = { -1, -1, -1, -1 };				// 버텍스와 연결된 본들의 인덱스
-		float boneWeights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };		// 각 본들의 가중치
+		std::array<int, 4> BoneIndices{ -1, -1, -1, -1 };		// 버텍스와 연결된 본들의 인덱스
+		std::array<float, 4> BoneWeights{ .0f, .0f, .0f, .0f };	// 각 본들의 가중치
 	};
 
 	struct Mesh_BoneBuffer
 	{
-		DirectX::SimpleMath::Matrix boneMat[BONE_MAXSIZE] = { DirectX::SimpleMath::Matrix::Identity, };
+		std::array<DirectX::SimpleMath::Matrix, BONE_MAXSIZE> BoneMat;
+
+		Mesh_BoneBuffer() {
+			for (auto& mat : BoneMat)
+				mat = DirectX::SimpleMath::Matrix::Identity;
+		}
 	};
 
 	struct MeshData {
 		std::vector<std::vector<Mesh_Vertex>> vertices;
 		std::vector<std::vector<UINT>> indices;
-		std::vector<ResPtr<Material>> materials;
 	};
 
 	struct MeshGPU {

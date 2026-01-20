@@ -10,16 +10,13 @@ namespace MMMEngine {
 	class MMMENGINE_API MeshRenderer : public Behaviour
 	{
 	private:
-
 		// GPU ¹öÆÛ
 		ResPtr<StaticMesh> mesh = nullptr;
 		std::vector<std::weak_ptr<RendererBase>> renderers;
-
-		void SetMesh(ResPtr<StaticMesh>& _mesh);
-
 	public:
 		MeshRenderer();
 
+		void SetMesh(ResPtr<StaticMesh>& _mesh);
 		void Start();
 		void Update();
 	};

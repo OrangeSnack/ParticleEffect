@@ -1,4 +1,4 @@
-#include "MaterialSerealizer.h"
+#include "MaterialSerializer.h"
 #include <rttr/type>
 #include <fstream>
 #include <filesystem>
@@ -10,9 +10,9 @@
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-DEFINE_SINGLETON(MMMEngine::MaterialSerealizer);
+DEFINE_SINGLETON(MMMEngine::MaterialSerializer);
 
-MMMEngine::PropertyValue MMMEngine::MaterialSerealizer::property_from_json(const nlohmann::json& j)
+MMMEngine::PropertyValue MMMEngine::MaterialSerializer::property_from_json(const nlohmann::json& j)
 {
 	std::string type = j.at("type").get<std::string>();
 
@@ -45,7 +45,7 @@ MMMEngine::PropertyValue MMMEngine::MaterialSerealizer::property_from_json(const
 	throw std::runtime_error("Unknown PropertyValue type: " + type);
 }
 
-void MMMEngine::MaterialSerealizer::to_json(json& j, const MMMEngine::PropertyValue& value)
+void MMMEngine::MaterialSerializer::to_json(json& j, const MMMEngine::PropertyValue& value)
 {
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
@@ -69,13 +69,12 @@ void MMMEngine::MaterialSerealizer::to_json(json& j, const MMMEngine::PropertyVa
 }
 
 
-void MMMEngine::MaterialSerealizer::Serealize(Material* _material, std::wstring _path)
+void MMMEngine::MaterialSerializer::Serealize(Material* _material, std::wstring _path)
 {
 	json snapshot;
 	auto matMUID = _material->GetMUID().IsEmpty() ? Utility::MUID::NewMUID() : _material->GetMUID();
 
 	snapshot["MUID"] = matMUID.ToString();
-	snapshot["name"] = _material->GetName();
 
 	json props = json::object();
 	for (auto& [key, val] : _material->GetProperties())
@@ -103,7 +102,7 @@ void MMMEngine::MaterialSerealizer::Serealize(Material* _material, std::wstring 
 	file.close();
 }
 
-void MMMEngine::MaterialSerealizer::UnSerealize(Material* _material, std::wstring _path)
+void MMMEngine::MaterialSerializer::UnSerealize(Material* _material, std::wstring _path)
 {
 	// 파일 읽기
 	std::ifstream inFile("data.json", std::ios::binary);
@@ -111,8 +110,13 @@ void MMMEngine::MaterialSerealizer::UnSerealize(Material* _material, std::wstrin
 		throw std::runtime_error("파일을 열수 없습니다.");
 	}
 
-	nlohmann::json snapshot;
-	inFile >> snapshot;
+	// 파일 전체를 메모리에 로드
+	std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(inFile)),
+		std::istreambuf_iterator<char>());
+
+	// MessagePack → JSON 변환
+	nlohmann::json snapshot = nlohmann::json::from_msgpack(buffer);
+
 
 	// Name
 	if (snapshot.contains("name")) {

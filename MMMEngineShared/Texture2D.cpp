@@ -14,9 +14,10 @@ namespace fs = std::filesystem;
 RTTR_REGISTRATION
 {
 	using namespace rttr;
+	using namespace MMMEngine;
 
-	registration::class_<MMMEngine::ResPtr<MMMEngine::Texture2D>>("Texture2D")
-		.property_readonly("GetFilePath",& MMMEngine::Texture2D::GetFilePath);
+	registration::class_<Texture2D>("Texture2D")
+		.property_readonly("GetFilePath",&Texture2D::GetFilePath);
 }
 
 // SRV 만들어주는 함수

@@ -10,7 +10,7 @@
 #include "json/json.hpp"
 
 #include <rttr/registration>
-#include "MaterialSerealizer.h"
+#include "MaterialSerializer.h"
 
 #pragma comment (lib, "DirectXTex.lib")
 #pragma comment (lib, "DirectXTK.lib")
@@ -80,7 +80,7 @@ void MMMEngine::Material::LoadTexture(const std::wstring& _propertyName, const s
 
 bool MMMEngine::Material::LoadFromFilePath(const std::wstring& _filePath)
 {
-	MaterialSerealizer::Get().UnSerealize(this, _filePath);
+	MaterialSerializer::Get().UnSerealize(this, _filePath);
 
 	return true;
 }
