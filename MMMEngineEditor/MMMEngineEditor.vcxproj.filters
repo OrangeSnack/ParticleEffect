@@ -183,7 +183,7 @@
       <Filter>소스 파일\EditorWIndow\Popup</Filter>
     </ClCompile>
     <ClCompile Include="ScriptBuildWindow.cpp">
-      <Filter>소스 파일</Filter>
+      <Filter>소스 파일\EditorWIndow\Popup</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
