@@ -377,7 +377,7 @@ void MMMEngine::Editor::FilesWindow::DrawGridItem(const fs::path& path, bool isD
     if (isSelected)
     {
         ImVec2 min = ImGui::GetCursorScreenPos();
-        ImVec2 max = ImVec2(min.x + cellSize, min.y + cellSize + 30); // +30 for text
+        ImVec2 max = ImVec2(min.x + cellSize, min.y + cellSize + 15); // +15 for text
         ImGui::GetWindowDrawList()->AddRectFilled(
             min, max,
             IM_COL32(50, 100, 200, 100),
