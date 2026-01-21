@@ -300,13 +300,13 @@ void MMMEngine::Editor::FilesWindow::DrawGridView(const fs::path& root)
     // Right click menu on empty space
     if (ImGui::BeginPopupContextItem("EmptySpaceRightClickMenu"))
     {
-        if (ImGui::MenuItem("New Folder"))
+        if (ImGui::MenuItem(u8"새 폴더"))
         {
             fs::path newFolderPath = MakeFolderUnique(m_currentDirectory, "folder");
             fs::create_directories(newFolderPath);
         }
 
-        if (ImGui::MenuItem("New Script"))
+        if (ImGui::MenuItem(u8"새 스크립트"))
         {
             m_openCreateScriptModalRequest = true;
             m_newScriptParentDirectory = m_currentDirectory.string();
@@ -318,20 +318,20 @@ void MMMEngine::Editor::FilesWindow::DrawGridView(const fs::path& root)
     // Create Script Modal
     if (m_openCreateScriptModalRequest)
     {
-        ImGui::OpenPopup("Create Script");
+        ImGui::OpenPopup(u8"스크립트 생성");
         m_openCreateScriptModalRequest = false;
     }
 
     ImGui::SetNextWindowSize(ImVec2(350, 0), ImGuiCond_FirstUseEver);
-    if (ImGui::BeginPopupModal("Create Script", nullptr, ImGuiWindowFlags_NoResize))
+    if (ImGui::BeginPopupModal(u8"스크립트 생성", nullptr, ImGuiWindowFlags_NoResize))
     {
-        ImGui::Text("Name:");
+        ImGui::Text(u8"이름:");
         ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
         ImGui::InputText("##scriptname", m_newScriptName, sizeof(m_newScriptName));
 
         bool emptyName = strlen(m_newScriptName) == 0;
         ImGui::BeginDisabled(emptyName);
-        if (ImGui::Button("Create"))
+        if (ImGui::Button(u8"생성"))
         {
             CreateNewScript(m_newScriptParentDirectory, m_newScriptName);
             memset(m_newScriptName, 0, sizeof(m_newScriptName));
@@ -341,7 +341,7 @@ void MMMEngine::Editor::FilesWindow::DrawGridView(const fs::path& root)
 
         ImGui::SameLine();
 
-        if (ImGui::Button("Cancel"))
+        if (ImGui::Button(u8"취소"))
         {
             memset(m_newScriptName, 0, sizeof(m_newScriptName));
             ImGui::CloseCurrentPopup();
@@ -476,7 +476,7 @@ void MMMEngine::Editor::FilesWindow::DrawGridItem(const fs::path& path, bool isD
     if (ImGui::BeginDragDropSource())
     {
         ImGui::SetDragDropPayload("FILE_PATH", pathStr.c_str(), pathStr.size() + 1);
-        ImGui::Text("%s", fileName.c_str());
+        ImGui::Text(u8"%s", fileName.c_str());
         ImGui::EndDragDropSource();
     }
 
@@ -494,7 +494,7 @@ void MMMEngine::Editor::FilesWindow::DrawGridItem(const fs::path& path, bool isD
     // Right click menu
     if (ImGui::BeginPopupContextItem("ItemContextMenu"))
     {
-        if (ImGui::MenuItem("Delete"))
+        if (ImGui::MenuItem(u8"삭제"))
         {
             try
             {
@@ -517,13 +517,13 @@ void MMMEngine::Editor::FilesWindow::DrawGridItem(const fs::path& path, bool isD
         if (isDirectory)
         {
             ImGui::Separator();
-            if (ImGui::MenuItem("New Folder"))
+            if (ImGui::MenuItem(u8"새 폴더"))
             {
                 fs::path newFolderPath = MakeFolderUnique(path, "folder");
                 fs::create_directories(newFolderPath);
             }
 
-            if (ImGui::MenuItem("New Script"))
+            if (ImGui::MenuItem(u8"새 스크립트"))
             {
                 m_openCreateScriptModalRequest = true;
                 m_newScriptParentDirectory = pathStr;
@@ -545,11 +545,11 @@ void MMMEngine::Editor::FilesWindow::DrawGridItem(const fs::path& path, bool isD
     float textWidth = ImGui::CalcTextSize(displayName.c_str()).x;
     float textOffset = (cellSize - textWidth) * 0.5f;
     ImGui::SetCursorPosX(cursorPos.x + textOffset);
-    ImGui::TextWrapped("%s", displayName.c_str());
+    ImGui::TextWrapped(u8"%s", displayName.c_str());
 
     if (ImGui::IsItemHovered() && fileName.length() > 12)
     {
-        ImGui::SetTooltip("%s", fileName.c_str());
+        ImGui::SetTooltip(u8"%s", fileName.c_str());
     }
 
     ImGui::PopID();
