@@ -50,7 +50,7 @@ void MMMEngine::EditorCamera::Reset()
 	m_Position = m_PositionInitial;
 }
 
-void MMMEngine::EditorCamera::Update(float elapsedTime)
+void MMMEngine::EditorCamera::Update()
 {
 	DirectX::SimpleMath::Vector3 forward = GetForward();
 	DirectX::SimpleMath::Vector3 right = GetRight();
@@ -93,7 +93,7 @@ void MMMEngine::EditorCamera::Update(float elapsedTime)
 	// 매트릭스 만들기
 	if (m_InputVector.Length() > 0.0f)
 	{
-		m_Position += m_InputVector * m_MoveSpeed * elapsedTime;
+		m_Position += m_InputVector * m_MoveSpeed * TimeManager::Get().GetDeltaTime();
 		m_InputVector = DirectX::SimpleMath::Vector3(0.0f, 0.0f, 0.0f);
 	}
 
