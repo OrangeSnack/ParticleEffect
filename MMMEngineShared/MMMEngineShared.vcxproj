@@ -213,6 +213,7 @@
     <ClInclude Include="MMMTime.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="ResourceSerializer.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SceneRef.h" />
@@ -262,6 +263,7 @@
     <ClCompile Include="RenderShared.h" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
+    <ClCompile Include="ResourceSerializer.cpp" />
     <ClCompile Include="rttr_directxmath_registry.cpp" />
     <ClCompile Include="rttr_simplemath_registry.cpp" />
     <ClCompile Include="Scene.cpp" />

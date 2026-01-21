@@ -1,4 +1,8 @@
 #pragma once
+#ifndef NOMINMAX
+	#define NOMINMAX 
+#endif // !NOMINMAX
+
 #include "Singleton.hpp"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -11,17 +15,18 @@
 
 #pragma warning(push)
 #pragma warning(disable: 4251)
+
 namespace MMMEngine {
+	enum class ModelType {
+		Static,
+		Animated
+	};
 
 	class StaticMesh;
 	class SkeletalMesh;
 	class AssimpLoader : public Utility::Singleton<MMMEngine::AssimpLoader>
 	{
 	public:
-		enum class ModelType {
-			Static,
-			Animated
-		};
 		struct ImportOptions {
 			ModelType type;
 			unsigned int assimpFlags;
@@ -116,9 +121,6 @@ namespace MMMEngine {
 		// 모델 등록하기 (경로, 타입)
 		void RegisterModel(const std::wstring path, ModelType type);
 
-		// 모델 불러오기 (id)
-		const ModelAsset* GetModel(const std::string& id) const;
-
 		// 출력 경로
 		std::wstring m_exportPath = L"Assets/";
 	protected:
@@ -132,6 +134,7 @@ namespace MMMEngine {
 		bool ExtractAnimationClips(const aiScene* scene, const NodeTreeAsset& nodes, std::vector<AnimationClipAsset>& outClips);
 		bool ImportModel(const std::wstring& path, ModelType type, ModelAsset& out);
 
+		const ModelAsset* GetModel(const std::string& id) const;
 	private:
 
 		Assimp::Importer m_importer;

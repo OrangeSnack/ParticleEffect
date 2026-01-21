@@ -1,10 +1,17 @@
 #pragma once
 #include "Behaviour.h"
 #include <SimpleMath.h>
+#include "rttr/type"
+
 
 namespace MMMEngine {
 	class MMMENGINE_API EditorCamera : public Behaviour
 	{
+		RTTR_ENABLE(Behaviour);
+		RTTR_REGISTRATION_FRIEND
+		friend class BehaviourManager;
+		friend class GameObject;
+
 	public:
 		EditorCamera();
 
@@ -27,6 +34,8 @@ namespace MMMEngine {
 		void SetSpeed(float speed) { m_MoveSpeed = speed; }
 		void AddPitch(float value);
 		void AddYaw(float value);
+
+		void Initialize() override;
 	};
 }
 

@@ -12,14 +12,8 @@ bool MMMEngine::VShader::LoadFromFilePath(const std::wstring& filePath)
 
 	auto m_pDevice = RenderManager::Get().GetDevice();
 
-	HR_T(m_pDevice->CreateVertexShader(
-		m_pBlob->GetBufferPointer(),
-		m_pBlob->GetBufferSize(),
-		nullptr,
-		m_pVShader.GetAddressOf()));
-
 	// VS쉐이더 컴파일
-	Microsoft::WRL::ComPtr<ID3D10Blob> errorBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
 
 	HR_T(D3DCompileFromFile(
 		filePath.c_str(),
@@ -30,4 +24,10 @@ bool MMMEngine::VShader::LoadFromFilePath(const std::wstring& filePath)
 		0, 0,
 		m_pBlob.GetAddressOf(),
 		errorBlob.GetAddressOf()));
+
+	HR_T(m_pDevice->CreateVertexShader(
+		m_pBlob->GetBufferPointer(),
+		m_pBlob->GetBufferSize(),
+		nullptr,
+		m_pVShader.GetAddressOf()));
 }

@@ -63,7 +63,7 @@ void MMMEngine::MaterialSerializer::to_json(json& j, const MMMEngine::PropertyVa
 				arg._41,arg._42,arg._43,arg._44
 			}} };
 		else if constexpr (std::is_same_v<T, ResPtr<MMMEngine::Texture2D>>)
-			j = { {"type", "Texture2D"}, {"file", arg ? arg->GetFilePath() : L""} };
+			j = { {"type", "Texture2D"}, {"file", arg ? Utility::StringHelper::WStringToString(arg->GetFilePath()) : ""} };
 		}, value);
 }
 
@@ -82,19 +82,27 @@ fs::path MMMEngine::MaterialSerializer::Serealize(Material* _material, std::wstr
 		to_json(props[skey], val);
 	}
 	snapshot["properties"] = props;
-	snapshot["vshader"] = { {"file", _material->GetVShader()->GetFilePath()} };
-	snapshot["pshader"] = { {"file", _material->GetPShader()->GetFilePath()} };
+	if (_material->GetVShader())
+		snapshot["vshader"] = { {"file", Utility::StringHelper::WStringToString(_material->GetVShader()->GetFilePath()) } };
+	else
+		snapshot["vshader"] = { {"file", ""} };
+
+	if (_material->GetPShader())
+		snapshot["pshader"] = { {"file", Utility::StringHelper::WStringToString(_material->GetPShader()->GetFilePath()) } };
+	else
+		snapshot["pshader"] = { {"file", ""} };
+	
 	
 	std::vector<uint8_t> v = json::to_msgpack(snapshot);
 
-	fs::path p(_path + _name + L"_Material");
+	fs::path p(_path);
 	p = p / (_name + L"_Material" + std::to_wstring(_index));
 
 	if (p.has_parent_path() && !fs::exists(p.parent_path())) {
 		fs::create_directories(p.parent_path());
 	}
 
-	std::ofstream file(_path, std::ios::binary);
+	std::ofstream file(p.string(), std::ios::binary);
 	if (!file.is_open()) {
 		throw std::runtime_error("파일을 열 수 없습니다: " + Utility::StringHelper::WStringToString(_path));
 	}

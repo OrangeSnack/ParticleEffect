@@ -3,15 +3,31 @@
 #include "InputManager.h"
 #include "Transform.h"
 
+#include "rttr/registration.h"
+
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
+
+RTTR_REGISTRATION
+{
+	using namespace rttr;
+	using namespace MMMEngine;
+
+	registration::class_<EditorCamera>("EditorCamera")
+		(rttr::metadata("wrapper_type", rttr::type::get<ObjPtr<EditorCamera>>()));
+
+	registration::class_<ObjPtr<EditorCamera>>("ObjPtr<EditorCamera>")
+		.constructor<>(
+			[]() {
+				return Object::NewObject<EditorCamera>();
+			});
+
+	type::register_wrapper_converter_for_base_classes<MMMEngine::ObjPtr<EditorCamera>>();
+}
 
 MMMEngine::EditorCamera::EditorCamera()
 {
 	REGISTER_BEHAVIOUR_MESSAGE(Update);
-	m_CamTrans = GetGameObject()->GetTransform();
-	
-	Reset();
 }
 
 DirectX::SimpleMath::Vector3 MMMEngine::EditorCamera::GetForward()
@@ -90,10 +106,7 @@ void MMMEngine::EditorCamera::GetViewMatrix(DirectX::SimpleMath::Matrix& out)
 {
 	auto& worldMat = m_CamTrans->GetWorldMatrix();
 
-	DirectX::SimpleMath::Vector3 eye = worldMat.Translation();
-	DirectX::SimpleMath::Vector3 target = worldMat.Translation() + GetForward();
-	DirectX::SimpleMath::Vector3 up = worldMat.Up();
-	out = XMMatrixLookAtLH(eye, target, up);
+	out = worldMat.Invert();
 }
 
 void MMMEngine::EditorCamera::AddInputVector(const DirectX::SimpleMath::Vector3& input)
@@ -126,4 +139,12 @@ void MMMEngine::EditorCamera::AddYaw(float value)
 	{
 		m_Rotation.y += XM_2PI;
 	}
+}
+
+void MMMEngine::EditorCamera::Initialize()
+{
+	__super::Initialize();
+
+	m_CamTrans = GetGameObject()->GetTransform();
+	Reset();
 }

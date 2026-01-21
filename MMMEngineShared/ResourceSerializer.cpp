@@ -110,10 +110,6 @@ fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _
 
 	snapshot["MUID"] = meshMUID.ToString();
 
-	json meshJson = json::array();
-	meshJson.push_back(SerializeMesh(_in->meshData));
-	snapshot["Mesh"] = meshJson;
-
 	json matJson = json::array();
 	int index = 0;
 	for (auto& matPtr : _in->materials) {
@@ -123,6 +119,10 @@ fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _
 		matJson.push_back(matPath.u8string());
 	}
 	snapshot["Materials"] = matJson;
+
+	json meshJson = json::array();
+	meshJson.push_back(SerializeMesh(_in->meshData));
+	snapshot["Mesh"] = meshJson;
 
 	// Json 출력
 	std::vector<uint8_t> v = json::to_msgpack(snapshot);
@@ -134,13 +134,18 @@ fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _
 		fs::create_directories(p.parent_path());
 	}
 
-	std::ofstream file(p.wstring(), std::ios::binary);
+	//std::ofstream file(p.wstring(), std::ios::binary);
+	std::ofstream file(p.string());
 	if (!file.is_open()) {
 		throw std::runtime_error("파일을 열 수 없습니다: " + Utility::StringHelper::WStringToString(_path));
 	}
 
-	file.write(reinterpret_cast<const char*>(v.data()), v.size());
+	/*file.write(reinterpret_cast<const char*>(v.data()), v.size());
+	file.close();*/
+
+	file << snapshot.dump(4); // 4는 들여쓰기(indent) 수준
 	file.close();
+
 	return p;
 }
 

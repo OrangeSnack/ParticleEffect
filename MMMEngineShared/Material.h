@@ -43,8 +43,8 @@ namespace MMMEngine {
 
 		void SetVShader(const std::wstring& _filePath);
 		void SetPShader(const std::wstring& _filePath);
-		ResPtr<VShader> GetVShader() const;
-		ResPtr<PShader> GetPShader() const;
+		const ResPtr<VShader> GetVShader();
+		const ResPtr<PShader> GetPShader();
 
 		void LoadTexture(const std::wstring& _name, const std::wstring& _filePath);
 

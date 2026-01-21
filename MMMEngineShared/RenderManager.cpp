@@ -12,7 +12,117 @@ DEFINE_SINGLETON(MMMEngine::RenderManager)
 using namespace Microsoft::WRL;
 
 namespace MMMEngine {
-	void RenderManager::Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight)
+
+	void RenderManager::ResizeRTVs(int width, int height)
+	{
+		if (!m_pDevice || !m_pDeviceContext || !m_pSwapChain)
+			return;
+
+		// 최소 방어
+		if (width <= 0 || height <= 0)
+			return;
+
+		HRESULT hr = S_OK;
+
+		// 1) 파이프라인에서 기존 RTV/DSV 바인딩 해제 (ResizeBuffers 전에 필수)
+		ID3D11RenderTargetView* nullRTV[1] = { nullptr };
+		m_pDeviceContext->OMSetRenderTargets(1, nullRTV, nullptr);
+		m_pDeviceContext->Flush();
+
+		// 2) 기존 리소스 릴리즈 (ComPtr면 Reset)
+		m_pRenderTargetView.Reset();
+
+		m_pSceneSRV.Reset();
+		m_pSceneRTV.Reset();
+		m_pSceneTexture.Reset();
+
+		m_pDepthStencilView.Reset();
+		m_pDepthStencilTexture.Reset();
+
+		// 3) 스왑체인 버퍼 리사이즈
+		//    포맷은 DXGI_FORMAT_UNKNOWN을 주면 기존 포맷 유지
+		//    BufferCount는 0을 주면 기존 유지
+		hr = m_pSwapChain->ResizeBuffers(
+			0,
+			static_cast<UINT>(width),
+			static_cast<UINT>(height),
+			DXGI_FORMAT_UNKNOWN,
+			0
+		);
+		if (FAILED(hr))
+			return;
+
+		// 4) 백버퍼 RTV 재생성
+		{
+			ComPtr<ID3D11Texture2D> backBuffer;
+			hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
+			if (FAILED(hr))
+				return;
+
+			hr = m_pDevice->CreateRenderTargetView1(backBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf());
+			if (FAILED(hr))
+				return;
+		}
+
+		// 5) 씬 텍스처/RTV/SRV 재생성 (StartUp과 동일 스펙, 크기만 변경)
+		{
+			D3D11_TEXTURE2D_DESC1 descTex = {};
+			descTex.Width = static_cast<UINT>(width);
+			descTex.Height = static_cast<UINT>(height);
+			descTex.MipLevels = 1;
+			descTex.ArraySize = 1;
+			descTex.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			descTex.SampleDesc.Count = 1;
+			descTex.SampleDesc.Quality = 0;
+			descTex.Usage = D3D11_USAGE_DEFAULT;
+			descTex.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+			descTex.CPUAccessFlags = 0;
+			descTex.MiscFlags = 0;
+
+			hr = m_pDevice->CreateTexture2D1(&descTex, nullptr, m_pSceneTexture.GetAddressOf());
+			if (FAILED(hr))
+				return;
+
+			hr = m_pDevice->CreateRenderTargetView1(m_pSceneTexture.Get(), nullptr, m_pSceneRTV.GetAddressOf());
+			if (FAILED(hr))
+				return;
+
+			hr = m_pDevice->CreateShaderResourceView1(m_pSceneTexture.Get(), nullptr, m_pSceneSRV.GetAddressOf());
+			if (FAILED(hr))
+				return;
+		}
+
+		// 6) Depth 텍스처/DSV 재생성 (StartUp과 동일 스펙, 크기만 변경)
+		{
+			D3D11_TEXTURE2D_DESC1 descDepth = {};
+			descDepth.Width = static_cast<UINT>(width);
+			descDepth.Height = static_cast<UINT>(height);
+			descDepth.MipLevels = 1;
+			descDepth.ArraySize = 1;
+			descDepth.Format = DXGI_FORMAT_R24G8_TYPELESS;
+			descDepth.SampleDesc.Count = 1;
+			descDepth.SampleDesc.Quality = 0;
+			descDepth.Usage = D3D11_USAGE_DEFAULT;
+			descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+			descDepth.CPUAccessFlags = 0;
+			descDepth.MiscFlags = 0;
+
+			hr = m_pDevice->CreateTexture2D1(&descDepth, nullptr, m_pDepthStencilTexture.GetAddressOf());
+			if (FAILED(hr))
+				return;
+
+			D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+			descDSV.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+			descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+			descDSV.Texture2D.MipSlice = 0;
+
+			hr = m_pDevice->CreateDepthStencilView(m_pDepthStencilTexture.Get(), &descDSV, m_pDepthStencilView.GetAddressOf());
+			if (FAILED(hr))
+				return;
+		}
+	}
+
+	void RenderManager::StartUp(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight)
 	{
 		// 디바이스 생성
 		ComPtr<ID3D11Device> device;
@@ -31,15 +141,9 @@ namespace MMMEngine {
 		m_rClientWidth = _ClientWidth;
 		m_rClientHeight = _ClientHeight;
 
-		// 카메라 생성
-		// WARNING::오브젝트 생성!!
-		// TODO::에디터 구현부로 이 코드 옮기기
-		auto camera = ObjectManager::Get().NewObject<GameObject>("EditorCamera");
-		m_pCamera = camera->AddComponent<EditorCamera>();
-
 		// 인스턴스 초기화 뭉탱이
-		this->InitD3D();
-		this->Start();
+		InitD3D();
+		Start();
 	}
 	void RenderManager::InitD3D()
 	{
@@ -72,7 +176,6 @@ namespace MMMEngine {
 		// 렌더타겟 생성
 		HR_T(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D1), (void**)m_pBackBuffer.GetAddressOf()));
 		HR_T(m_pDevice->CreateRenderTargetView1(m_pBackBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
-		HR_T(m_pDevice->CreateShaderResourceView1(m_pBackBuffer.Get(), nullptr, m_pBackSRV.GetAddressOf()));
 
 		// 뷰포트 설정
 		m_defaultViewport = {};
@@ -97,15 +200,14 @@ namespace MMMEngine {
 		depthDesc.CPUAccessFlags = 0;
 		depthDesc.MiscFlags = 0;
 
-		ComPtr<ID3D11Texture2D1> depthTexture;
-		HR_T(m_pDevice->CreateTexture2D1(&depthDesc, nullptr, depthTexture.GetAddressOf()));
+		HR_T(m_pDevice->CreateTexture2D1(&depthDesc, nullptr, m_pDepthStencilTexture.GetAddressOf()));
 
 		// 뎊스스탠실 뷰 생성
 		D3D11_DEPTH_STENCIL_VIEW_DESC dsv = {};
 		dsv.Format = depthDesc.Format;
 		dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		dsv.Texture2D.MipSlice = 0;
-		HR_T(m_pDevice->CreateDepthStencilView(depthTexture.Get(), &dsv, m_pDepthStencilView.GetAddressOf()));
+		HR_T(m_pDevice->CreateDepthStencilView(m_pDepthStencilTexture.Get(), &dsv, m_pDepthStencilView.GetAddressOf()));
 
 		// 래스터라이저 속성 생성
 		D3D11_RASTERIZER_DESC2 defaultRsDesc = {};
@@ -145,6 +247,28 @@ namespace MMMEngine {
 		HR_T(m_pDevice->CreateRasterizerState2(&rsDesc, m_pDefaultRS.GetAddressOf()));
 		assert(m_pDefaultRS && "RenderPipe::InitD3D : defaultRS not initialized!!");
 	
+		D3D11_TEXTURE2D_DESC1 descTex;
+		ZeroMemory(&descTex, sizeof(descTex));
+		descTex.Width = m_rClientWidth;
+		descTex.Height = m_rClientHeight;
+		descTex.MipLevels = 1;
+		descTex.ArraySize = 1;
+		descTex.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		descTex.SampleDesc.Count = 1;
+		descTex.SampleDesc.Quality = 0;
+		descTex.Usage = D3D11_USAGE_DEFAULT;
+		descTex.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		descTex.CPUAccessFlags = 0;
+		descTex.MiscFlags = 0;
+		HR_T(m_pDevice->CreateTexture2D1(&descTex, NULL, m_pSceneTexture.GetAddressOf()));
+
+		// 씬 텍스쳐 렌더 타겟 뷰 생성
+		HR_T(m_pDevice->CreateRenderTargetView1(m_pSceneTexture.Get(), NULL, m_pSceneRTV.GetAddressOf()));
+
+		// 씬 텍스쳐 쉐이더 리소스 뷰 생성
+		HR_T(m_pDevice->CreateShaderResourceView1(m_pSceneTexture.Get(), NULL, m_pSceneSRV.GetAddressOf()));
+
+
 		// 기본 VSShader 생성
 		m_pDefaultVSShader = ResourceManager::Get().Load<VShader>(L"Shader/PBR/VS/SkeletalVertexShader.hlsl");
 		m_pDefaultPSShader = ResourceManager::Get().Load<PShader>(L"Shader/PBR/PS/BRDFShader.hlsl");
@@ -164,16 +288,13 @@ namespace MMMEngine {
 			m_pDefaultVSShader->m_pBlob->GetBufferSize(), m_pDefaultInputLayout.GetAddressOf()
 		));
 }
-	void RenderManager::UnInitD3D()
+	void RenderManager::ShutDown()
 	{
 	}
 	void RenderManager::Start()
 	{
 		// 버퍼 기본색상
 		m_ClearColor = DirectX::SimpleMath::Vector4(0.45f, 0.55f, 0.60f, 1.00f);
-
-		m_pCamera->GetViewMatrix(m_camMat.mView);
-		m_camMat.mProjection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV4, m_rClientWidth / (FLOAT)m_rClientHeight, 0.01f, 100.0f);
 
 		// 캠 버퍼 생성
 		D3D11_BUFFER_DESC bd = {};
@@ -196,6 +317,20 @@ namespace MMMEngine {
 		m_propertyMap[L"ao"] = 32;
 	}
 
+	void RenderManager::ResizeScreen(int width, int height)
+	{
+		m_rClientWidth = width;
+		m_rClientHeight = height;
+		ResizeRTVs(width, height);
+	}
+
+	void RenderManager::SetCamera(ObjPtr<EditorCamera> _cameraComp)
+	{
+		if (!_cameraComp)
+			return;
+		m_pCamera = _cameraComp;
+	}
+
 	void RenderManager::BeginFrame()
 	{
 		// Clear
@@ -205,6 +340,13 @@ namespace MMMEngine {
 
 	void RenderManager::Render()
 	{
+		// 카메라 없으면 안해
+		if (!m_pCamera) {
+			m_pDeviceContext->OMSetRenderTargets(1, reinterpret_cast<ID3D11RenderTargetView* const*>(m_pRenderTargetView.GetAddressOf()), m_pDepthStencilView.Get());
+			return;
+		}
+			
+
 		// Init Queue 처리
 		while (!m_initQueue.empty()) {
 			auto& renderer = m_initQueue.front();
@@ -247,7 +389,7 @@ namespace MMMEngine {
 	void RenderManager::EndFrame()
 	{
 		// Present our back buffer to our front buffer
-		m_pSwapChain->Present(0, 0);
+		m_pSwapChain->Present(m_rSyncInterval, 0);
 	}
 
 	const int RenderManager::PropertyToIdx(const std::wstring& _propertyName) const

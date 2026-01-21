@@ -8,6 +8,9 @@
 #include <memory>
 #include <Material.h>
 
+#pragma comment (lib, "DirectXTex.lib")
+#pragma comment (lib, "DirectXTK.lib")
+
 #define BONE_MAXSIZE 256
 
 namespace MMMEngine {

@@ -324,9 +324,6 @@
     <ClInclude Include="PShader.h">
       <Filter>헤더 파일\Core\Render API\Resource</Filter>
     </ClInclude>
-    <ClInclude Include="resource1.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
     <ClInclude Include="GeoRenderer.h">
       <Filter>헤더 파일\Core\Render API\Renderer</Filter>
     </ClInclude>
@@ -351,9 +348,6 @@
     <ClInclude Include="MaterialSerializer.h">
       <Filter>헤더 파일\Core\Render API\Tool</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceSerializer.h">
-      <Filter>헤더 파일\Core\Render API\Tool</Filter>
-    </ClInclude>
     <ClInclude Include="ScriptBehaviour.h">
       <Filter>헤더 파일\Core\Behaviour API</Filter>
     </ClInclude>
@@ -365,6 +359,9 @@
     </ClInclude>
     <ClInclude Include="AssetsDatabase.h">
       <Filter>헤더 파일\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceSerializer.h">
+      <Filter>헤더 파일\Core\Render API\Tool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -482,20 +479,17 @@
     <ClCompile Include="AnimationClip.cpp">
       <Filter>소스 파일\Core\Render API\Resource</Filter>
     </ClCompile>
-    <ClCompile Include="RenderShared.cpp">
-      <Filter>소스 파일\Core\Render API</Filter>
-    </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>소스 파일\Core\Render API\Resource</Filter>
     </ClCompile>
     <ClCompile Include="MaterialSerializer.cpp">
       <Filter>소스 파일\Core\Render API\Tools</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceSerializer.cpp">
-      <Filter>소스 파일\Core\Render API\Tools</Filter>
-    </ClCompile>
     <ClCompile Include="TextResource.cpp">
       <Filter>소스 파일\Core\Core Test</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceSerializer.cpp">
+      <Filter>소스 파일\Core\Render API\Tools</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

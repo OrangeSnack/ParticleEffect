@@ -12,9 +12,6 @@
 #include <rttr/registration>
 #include "MaterialSerializer.h"
 
-#pragma comment (lib, "DirectXTex.lib")
-#pragma comment (lib, "DirectXTK.lib")
-
 namespace fs = std::filesystem;
 namespace mw = Microsoft::WRL;
 using json = nlohmann::json;
@@ -52,20 +49,24 @@ MMMEngine::PropertyValue MMMEngine::Material::GetProperty(const std::wstring& _n
 
 void MMMEngine::Material::SetVShader(const std::wstring& _filePath)
 {
+	if (_filePath.empty())
+		return;
 	m_pVShader = ResourceManager::Get().Load<VShader>(_filePath);
 }
 
 void MMMEngine::Material::SetPShader(const std::wstring& _filePath)
 {
+	if (_filePath.empty())
+		return;
 	m_pPShader = ResourceManager::Get().Load<PShader>(_filePath);
 }
 
-MMMEngine::ResPtr<MMMEngine::VShader> MMMEngine::Material::GetVShader() const
+const MMMEngine::ResPtr<MMMEngine::VShader> MMMEngine::Material::GetVShader()
 {
 	return m_pVShader;
 }
 
-MMMEngine::ResPtr<MMMEngine::PShader> MMMEngine::Material::GetPShader() const
+const MMMEngine::ResPtr<MMMEngine::PShader> MMMEngine::Material::GetPShader()
 {
 	return m_pPShader;
 }

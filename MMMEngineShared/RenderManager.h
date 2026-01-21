@@ -28,18 +28,20 @@ namespace MMMEngine
 	class PShader;
 	class MMMENGINE_API RenderManager : public Utility::ExportSingleton<RenderManager>
 	{
-		friend class Utility::ExportSingleton<RenderManager>;
 		friend class RendererBase;
 		friend class Material;
 	private:
-		RenderManager() = default;
 		std::map<int, std::vector<std::shared_ptr<RendererBase>>> m_Passes;
 		std::queue<std::shared_ptr<RendererBase>> m_initQueue;
+
+		void ResizeRTVs(int width, int height);
 
 	protected:
 		HWND* m_pHwnd = nullptr;	// HWND 포인터
 		UINT m_rClientWidth = 0;
 		UINT m_rClientHeight = 0;
+		int m_rSyncInterval = 1;
+		
 		float m_backColor[4] = { 0.0f, 0.5f, 0.5f, 1.0f };	// 백그라운드 컬러
 
 		// 디바이스
@@ -51,6 +53,7 @@ namespace MMMEngine
 
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1> m_pRenderTargetView;	// 렌더링 타겟뷰
 		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;		// 깊이값 처리를 위한 뎊스스텐실 뷰
+		Microsoft::WRL::ComPtr<ID3D11Texture2D1> m_pDepthStencilTexture;		// 뎊스스텐실 텍스쳐
 
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> m_pDafaultSamplerLinear;		// 샘플러 상태.
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState2> m_pDefaultRS;			// 기본 RS
@@ -58,6 +61,11 @@ namespace MMMEngine
 		Microsoft::WRL::ComPtr<ID3D11BlendState1> m_pDefaultBS;		// 기본 블랜드 스테이트
 		Microsoft::WRL::ComPtr<ID3D11RasterizerState2> m_DefaultRS;	// 기본 레스터라이저 스테이트
 		D3D11_VIEWPORT m_defaultViewport;							// 기본 뷰포트
+
+		// 씬을 처음에 그릴 중간 버퍼 (HDR 처리를 위해 보통 float 포맷 사용)
+		Microsoft::WRL::ComPtr<ID3D11Texture2D1>          m_pSceneTexture;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1>   m_pSceneRTV;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView1> m_pSceneSRV;
 
 		// 버퍼 기본색상
 		DirectX::SimpleMath::Vector4 m_ClearColor;
@@ -74,15 +82,17 @@ namespace MMMEngine
 
 		// 백버퍼 텍스쳐
 		Microsoft::WRL::ComPtr<ID3D11Texture2D1> m_pBackBuffer = nullptr;		// 백버퍼 텍스처
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView1> m_pBackSRV = nullptr;	// 백버퍼 SRV
 
 		// 텍스쳐 버퍼인덱스 주는 맵 <propertyName, index>
 		std::unordered_map<std::wstring, int> m_propertyMap;
 	public:
 		void StartUp(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight);
 		void InitD3D();
-		void UnInitD3D();
+		void ShutDown();
 		void Start();
+		void ResizeScreen(int width, int height);
+		void SetCamera(ObjPtr<EditorCamera> _cameraComp);
+
 
 		void BeginFrame();
 		void Render();

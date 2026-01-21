@@ -75,6 +75,7 @@ MMMEngine::ResPtr<MMMEngine::StaticMesh> MMMEngine::AssimpLoader::ConvertStaticM
 	std::vector<ResPtr<Material>> matList;
 	for (const auto& mat : _model->materials) {
 		// 렌더러 메테리얼으로 변환 -> 리스트 작성
+		// TODO:: 메테리얼 생성할때 VS, PS 어떻게 할지 생각하기.
 		ResPtr<Material> material = std::make_shared<Material>();
 		for (const auto& [sementic, ref] : mat.textures) {
 			if (!ConvertMaterial(sementic, &ref, material.get()))
@@ -394,7 +395,10 @@ bool MMMEngine::AssimpLoader::GetTexturePath(const aiMaterial* mat, aiTextureTyp
 	if (mat->GetTextureCount(type) == 0) return false;
 	if (mat->GetTexture(type, 0, &str) != AI_SUCCESS) return false;
 
-	outPath = str.C_Str();
+	fs::path filename(str.C_Str());
+	filename.filename();
+
+	outPath = filename.filename().string();
 	return !outPath.empty();
 }
 
@@ -706,11 +710,11 @@ void MMMEngine::AssimpLoader::RegisterModel(const std::wstring path, ModelType t
 
 	switch (type)
 	{
-	case MMMEngine::AssimpLoader::ModelType::Static:
+	case MMMEngine::ModelType::Static:
 		staticMesh = ConvertStaticMesh(&model);
 		ResourceSerializer::Get().Serialize_StaticMesh(staticMesh.get(), m_exportPath, filename);
 		break;
-	case MMMEngine::AssimpLoader::ModelType::Animated:
+	case MMMEngine::ModelType::Animated:
 		skeletalMesh = ConvertSkeletalMesh(&model);
 		//TODO::Skeletalmesh 직렬화
 		//ResourceSerializer::Get().Serialize_StaticMesh(skeletalMesh.get(), m_exportPath);
