@@ -70,25 +70,61 @@
     <Filter Include="소스 파일\EditorWIndow\ImGuiHelper">
       <UniqueIdentifier>{13ca9905-ce86-4a02-bae1-02910f48d488}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\Utility">
-      <UniqueIdentifier>{af4cd436-1d5d-4557-b746-0010f3567dd0}</UniqueIdentifier>
+    <Filter Include="헤더 파일\Tools">
+      <UniqueIdentifier>{53a95095-d911-4b1d-b8a7-fe240cf26eef}</UniqueIdentifier>
     </Filter>
-    <Filter Include="헤더 파일\Utility">
-      <UniqueIdentifier>{55bf2cbb-33c1-42eb-b9bd-e31ef95cf812}</UniqueIdentifier>
+    <Filter Include="소스 파일\Tools">
+      <UniqueIdentifier>{33b40b9d-04cb-43a2-9838-c84274760079}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EditorRegistry.h">
       <Filter>헤더 파일\EditorRegistry</Filter>
     </ClInclude>
-    <ClInclude Include="ProjectManager.h">
-      <Filter>헤더 파일\Project</Filter>
-    </ClInclude>
     <ClInclude Include="Project.h">
       <Filter>헤더 파일\Project</Filter>
     </ClInclude>
+    <ClInclude Include="imgui-docking\imgui.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\imgui_internal.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\imstb_rectpack.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\imstb_textedit.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\imstb_truetype.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\imconfig.h">
+      <Filter>헤더 파일\ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h">
+      <Filter>헤더 파일\ImGui\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\backends\imgui_impl_null.h">
+      <Filter>헤더 파일\ImGui\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h">
+      <Filter>헤더 파일\ImGui\Backend</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGuiEditorContext.h">
+      <Filter>헤더 파일\EditorWindow\ForEditorContext</Filter>
+    </ClInclude>
+    <ClInclude Include="HierarchyWindow.h">
+      <Filter>헤더 파일\EditorWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="InspectorWindow.h">
+      <Filter>헤더 파일\EditorWindow</Filter>
+    </ClInclude>
     <ClInclude Include="DragAndDrop.h">
       <Filter>헤더 파일\EditorWindow\ForEditorContext</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectManager.h">
+      <Filter>헤더 파일\Project</Filter>
     </ClInclude>
     <ClInclude Include="BuildManager.h">
       <Filter>헤더 파일\Build</Filter>
@@ -105,50 +141,14 @@
     <ClInclude Include="ScriptBuildWindow.h">
       <Filter>헤더 파일\EditorWindow\Popup</Filter>
     </ClInclude>
-    <ClInclude Include="AssimpLoader.h">
-      <Filter>헤더 파일\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="ConsoleWindow.h">
       <Filter>헤더 파일\EditorWindow</Filter>
     </ClInclude>
     <ClInclude Include="ConsoleStreamBuf.h">
       <Filter>헤더 파일\EditorWindow\ImGuiHelper</Filter>
     </ClInclude>
-    <ClInclude Include="HierarchyWindow.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\backends\imgui_impl_null.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imconfig.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imgui.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imgui_internal.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imstb_rectpack.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imstb_textedit.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui-docking\imstb_truetype.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="InspectorWindow.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="ImGuiEditorContext.h">
-      <Filter>헤더 파일\EditorWindow\ForEditorContext</Filter>
+    <ClInclude Include="AssimpLoader.h">
+      <Filter>헤더 파일\Tools</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -209,11 +209,8 @@
     <ClCompile Include="ConsoleWindow.cpp">
       <Filter>소스 파일\EditorWIndow</Filter>
     </ClCompile>
-    <ClCompile Include="main_transform_test.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="AssimpLoader.cpp">
-      <Filter>소스 파일\Utility</Filter>
+      <Filter>소스 파일\Tools</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

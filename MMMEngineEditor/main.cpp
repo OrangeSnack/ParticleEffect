@@ -62,7 +62,7 @@ void Initialize()
 		BuildManager::Get().SetProgressCallbackString([](const std::string& progress) { std::cout << progress.c_str() << std::endl; });
 	}
 
-	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
+	RenderManager::Get().StartUp(&hwnd, windowInfo.width, windowInfo.height);
 	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeScreen>(&RenderManager::Get());
 
 	ImGuiEditorContext::Get().Initialize(hwnd, RenderManager::Get().GetDevice(), RenderManager::Get().GetContext());

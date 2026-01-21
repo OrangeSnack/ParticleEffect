@@ -79,7 +79,7 @@ namespace MMMEngine
 		// 텍스쳐 버퍼인덱스 주는 맵 <propertyName, index>
 		std::unordered_map<std::wstring, int> m_propertyMap;
 	public:
-		void Initialize(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight);
+		void StartUp(HWND* _hwnd, UINT _ClientWidth, UINT _ClientHeight);
 		void InitD3D();
 		void UnInitD3D();
 		void Start();
@@ -89,6 +89,7 @@ namespace MMMEngine
 		void EndFrame();
 
 		const Microsoft::WRL::ComPtr<ID3D11Device5> GetDevice() const { return m_pDevice; }
+		const Microsoft::WRL::ComPtr<ID3D11DeviceContext4> GetContext() const { return m_pDeviceContext; }
 		const std::shared_ptr<VShader> GetDefaultVS() const { return m_pDefaultVSShader; }
 		const std::shared_ptr<PShader> GetDefaultPS() const { return m_pDefaultPSShader; }
 		const Microsoft::WRL::ComPtr<ID3D11InputLayout> GetDefaultInputLayout() const { return m_pDefaultInputLayout; }
