@@ -20,9 +20,6 @@
 #include "BuildManager.h"
 #include "DLLHotLoadHelper.h"
 
-//t삭제해야함
-#include "AssimpLoader.h"
-
 namespace fs = std::filesystem;
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
@@ -65,8 +62,8 @@ void Initialize()
 		BuildManager::Get().SetProgressCallbackString([](const std::string& progress) { std::cout << progress.c_str() << std::endl; });
 	}
 
-	RenderManager::Get().StartUp(&hwnd, windowInfo.width, windowInfo.height);
-	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeScreen>(&RenderManager::Get());
+	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
+	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeSwapChainSize>(&RenderManager::Get());
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device = RenderManager::Get().GetDevice();
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context = RenderManager::Get().GetContext();
