@@ -20,6 +20,8 @@ namespace MMMEngine
 		friend class Component;
 		friend class Transform;
 
+		static uint64_t s_go_instanceID;
+
 		SceneRef m_scene = { static_cast<size_t>(-1), false };
 
 		ObjPtr<Transform> m_transform;
@@ -97,6 +99,45 @@ namespace MMMEngine
 
 			return nullptr;
 		}
+
+		template <typename T>
+		std::vector<ObjPtr<T>> GetComponents()
+		{
+			static_assert(std::is_base_of<Component, T>::value, "GetComponent()의 T는 Component를 상속받아야 합니다.");
+
+			std::vector<ObjPtr<T>> result;
+
+			for (auto& comp : m_components)
+			{
+				if (!comp.IsValid() || comp->IsDestroyed())
+					continue;
+
+				if (auto typedComp = comp.Cast<T>())
+					result.push_back(typedComp);
+			}
+
+			return result;
+		}
+
+		template <typename T>
+		size_t GetComponentsCount()
+		{
+			static_assert(std::is_base_of<Component, T>::value, "GetComponent()의 T는 Component를 상속받아야 합니다.");
+
+			size_t result = 0;
+
+			for (auto& comp : m_components)
+			{
+				if (!comp.IsValid() || comp->IsDestroyed())
+					continue;
+
+				if (auto typedComp = comp.Cast<T>())
+					++result;
+			}
+
+			return result;
+		}
+
 
 		const std::vector<ObjPtr<Component>>& GetAllComponents() const { return m_components; }
 
