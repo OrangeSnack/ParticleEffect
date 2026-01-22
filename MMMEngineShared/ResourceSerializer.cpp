@@ -41,12 +41,30 @@ json SerializeMeshVariant(const rttr::variant& var) {
 		auto view = var.create_sequential_view();
 		for (const auto& item : view)
 		{
-			arr.push_back(SerializeMeshVariant(item));
+			if (!item.is_valid())
+				continue;
+
+			json val = SerializeMeshVariant(item);
+
+			// null 값은 추가하지 않음
+			if (!val.is_null())
+				arr.push_back(val);
 		}
 		return arr;
 	}
 
 	if (t.is_class()) {
+		// Vector2 → 배열 [x,y]
+        if (t == type::get<DirectX::SimpleMath::Vector2>()) {
+            auto vec = var.get_value<DirectX::SimpleMath::Vector2>();
+            return json::array({ vec.x, vec.y });
+        }
+        // Vector3 → 배열 [x,y,z]
+        if (t == type::get<DirectX::SimpleMath::Vector3>()) {
+            auto vec = var.get_value<DirectX::SimpleMath::Vector3>();
+            return json::array({ vec.x, vec.y, vec.z });
+        }
+
 		json obj;
 		for (auto& prop : t.get_properties(
 			rttr::filter_item::instance_item |
@@ -54,8 +72,11 @@ json SerializeMeshVariant(const rttr::variant& var) {
 			rttr::filter_item::non_public_access))
 		{
 			rttr::variant value = prop.get_value(var);
-			if (value.is_valid())
-				obj[prop.get_name().to_string()] = SerializeMeshVariant(value);
+			if (value.is_valid()) {
+				json val = SerializeMeshVariant(value);
+				if (!val.is_null())
+					obj[prop.get_name().to_string()] = SerializeMeshVariant(value);
+			}
 		}
 		return obj;
 	}
@@ -216,7 +237,20 @@ void MMMEngine::ResourceSerializer::DeSerialize_StaticMesh(StaticMesh* _out, std
 						newVal = jval.get<float>();
 					else if (jval.is_string())
 						newVal = jval.get<std::string>();
-					else if (jval.is_array())
+					else if (jval.is_array() && jval.size() == 3) {
+						DirectX::SimpleMath::Vector3 vec;
+						vec.x = jval[0].get<float>();
+						vec.y = jval[1].get<float>();
+						vec.z = jval[2].get<float>();
+						newVal = vec;
+					}
+					else if (jval.is_array() && jval.size() == 2) {
+						DirectX::SimpleMath::Vector2 vec;
+						vec.x = jval[0].get<float>();
+						vec.y = jval[1].get<float>();
+						newVal = vec;
+					}
+					else if (jval.is_array() && (name == "BoneIndices" || name == "BoneWeights"))
 					{
 						// 배열 처리 (BoneIndices, BoneWeights)
 						std::vector<int> arr;

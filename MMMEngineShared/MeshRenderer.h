@@ -21,7 +21,8 @@ namespace MMMEngine {
 		MeshRenderer();
 		~MeshRenderer();
 
-		void SetMesh(ResPtr<StaticMesh>& _mesh);
+		ResPtr<StaticMesh>& GetMesh() { return mesh; }
+;		void SetMesh(ResPtr<StaticMesh>& _mesh);
 		void Start();
 		void Update();
 	};

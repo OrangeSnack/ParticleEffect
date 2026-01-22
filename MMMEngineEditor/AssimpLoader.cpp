@@ -12,6 +12,7 @@
 #include <RendererTools.h>
 #include "RenderManager.h"
 #include "ResourceSerializer.h"
+#include "ProjectManager.h"
 
 namespace fs = std::filesystem;
 
@@ -708,11 +709,15 @@ void MMMEngine::AssimpLoader::RegisterModel(const std::wstring path, ModelType t
 		filename = fPath.stem().wstring();
 	}
 
+	auto currentProjectFS = Editor::ProjectManager::Get().GetActiveProject().ProjectRootFS();
+
 	switch (type)
 	{
 	case MMMEngine::ModelType::Static:
 		staticMesh = ConvertStaticMesh(&model);
-		ResourceSerializer::Get().Serialize_StaticMesh(staticMesh.get(), m_exportPath, filename);
+		currentProjectFS = currentProjectFS / fs::path(m_exportPath);
+
+		ResourceSerializer::Get().Serialize_StaticMesh(staticMesh.get(), currentProjectFS.wstring(), filename);
 		break;
 	case MMMEngine::ModelType::Animated:
 		skeletalMesh = ConvertSkeletalMesh(&model);

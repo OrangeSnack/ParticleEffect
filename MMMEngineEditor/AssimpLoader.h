@@ -121,7 +121,7 @@ namespace MMMEngine {
 		// 모델 등록하기 (경로, 타입)
 		void RegisterModel(const std::wstring path, ModelType type);
 
-		// 출력 경로
+		// 출력 경로 (상대경로만 넣어야함, 절대경로 변경시 문의)
 		std::wstring m_exportPath = L"Assets/";
 	protected:
 		const aiScene* ImportScene(std::wstring path, ModelType type);

@@ -14,9 +14,15 @@ RTTR_REGISTRATION
 	using namespace MMMEngine;
 
 	registration::class_<MeshRenderer>("MeshRenderer")
-		.property("Enabled", &MeshRenderer::GetEnabled, &MeshRenderer::SetEnabled)
-		.property_readonly("IsActiveAndEnabled", &MeshRenderer::IsActiveAndEnabled)
-		.method("SetMesh", &MeshRenderer::SetMesh);
+		(rttr::metadata("wrapper_type", rttr::type::get<ObjPtr<MeshRenderer>>()))
+		.property("Mesh", &MeshRenderer::GetMesh, &MeshRenderer::SetMesh);
+		
+
+	registration::class_<ObjPtr<MeshRenderer>>("ObjPtr<MeshRenderer>")
+		.constructor<>(
+			[]() {
+				return Object::NewObject<MeshRenderer>();
+			});
 
 	type::register_wrapper_converter_for_base_classes<MMMEngine::ObjPtr<MeshRenderer>>();
 }
