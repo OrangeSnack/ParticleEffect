@@ -4,6 +4,7 @@
 #include "RenderShared.h"
 #include "rttr/type"
 
+#include <string>
 #include <fstream>
 #include "StringHelper.h"
 #include "MaterialSerializer.h"
@@ -102,6 +103,18 @@ json SerializeMesh(const MeshData& _meshData)
 	return submeshJson;
 }
 
+json SerializeMeshGroup(const std::unordered_map<UINT, std::vector<UINT>>& meshGroupData)
+{
+	json out;
+	type subt = type::get(meshGroupData);
+	out["Type"] = subt.get_name().to_string();
+	for (const auto& [mat, meshArr] : meshGroupData) {
+		out[std::to_string(mat)] = meshArr;
+	}
+
+	return out;
+}
+
 fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _in, std::wstring _path, std::wstring _name)
 {
 	json snapshot;
@@ -124,6 +137,10 @@ fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _
 	meshJson.push_back(SerializeMesh(_in->meshData));
 	snapshot["Mesh"] = meshJson;
 
+	json meshgroupJson;
+	meshgroupJson.push_back(SerializeMeshGroup(_in->meshGroupData));
+	snapshot["MeshGroup"] = meshgroupJson;
+
 	// Json 출력
 	std::vector<uint8_t> v = json::to_msgpack(snapshot);
 
@@ -134,16 +151,12 @@ fs::path MMMEngine::ResourceSerializer::Serialize_StaticMesh(const StaticMesh* _
 		fs::create_directories(p.parent_path());
 	}
 
-	//std::ofstream file(p.wstring(), std::ios::binary);
-	std::ofstream file(p.string());
+	std::ofstream file(p.string(), std::ios::binary);
 	if (!file.is_open()) {
 		throw std::runtime_error("파일을 열 수 없습니다: " + Utility::StringHelper::WStringToString(_path));
 	}
 
-	/*file.write(reinterpret_cast<const char*>(v.data()), v.size());
-	file.close();*/
-
-	file << snapshot.dump(4); // 4는 들여쓰기(indent) 수준
+	file.write(reinterpret_cast<const char*>(v.data()), v.size());
 	file.close();
 
 	return p;
@@ -261,4 +274,15 @@ void MMMEngine::ResourceSerializer::DeSerialize_StaticMesh(StaticMesh* _out, std
 		_out->materials = std::move(mats);
 	}
 
+	// MeshGroup 복원
+	if (snapshot.contains("MeshGroup"))
+	{
+		auto& meshGroupJson = snapshot["MeshGroup"];
+		std::unordered_map<UINT, std::vector<UINT>> data;
+		for (auto& [key, value] : meshGroupJson.items()) {
+			UINT matId = static_cast<UINT>(std::stoul(key));
+			data[matId] = value.get<std::vector<UINT>>();
+		}
+		_out->meshGroupData = std::move(data);
+	}
 }

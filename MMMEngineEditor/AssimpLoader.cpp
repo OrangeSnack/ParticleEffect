@@ -725,9 +725,9 @@ void MMMEngine::AssimpLoader::RegisterModel(const std::wstring path, ModelType t
 	}
 }
 
-const MMMEngine::AssimpLoader::ModelAsset* MMMEngine::AssimpLoader::GetModel(const std::string& id) const
-{
-	auto it = sModelCache.find(id);
-	if (it == sModelCache.end()) return nullptr;
-	return &it->second;
-}
+//const MMMEngine::AssimpLoader::ModelAsset* MMMEngine::AssimpLoader::GetModel(const std::string& id) const
+//{
+//	/*auto it = sModelCache.find(id);
+//	if (it == sModelCache.end()) return nullptr;
+//	return &it->second;*/
+//}

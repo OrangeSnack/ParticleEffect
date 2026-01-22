@@ -491,6 +491,9 @@
     <ClCompile Include="ResourceSerializer.cpp">
       <Filter>소스 파일\Core\Render API\Tools</Filter>
     </ClCompile>
+    <ClCompile Include="RenderShared.cpp">
+      <Filter>소스 파일\Core\Render API</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Object.inl">

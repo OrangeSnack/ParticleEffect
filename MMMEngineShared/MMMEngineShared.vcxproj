@@ -260,6 +260,7 @@
     <ClCompile Include="RendererBase.cpp" />
     <ClCompile Include="RendererTools.cpp" />
     <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="RenderShared.cpp" />
     <ClCompile Include="RenderShared.h" />
     <ClCompile Include="Resource.cpp" />
     <ClCompile Include="ResourceManager.cpp" />

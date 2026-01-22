@@ -134,7 +134,7 @@ namespace MMMEngine {
 		bool ExtractAnimationClips(const aiScene* scene, const NodeTreeAsset& nodes, std::vector<AnimationClipAsset>& outClips);
 		bool ImportModel(const std::wstring& path, ModelType type, ModelAsset& out);
 
-		const ModelAsset* GetModel(const std::string& id) const;
+		//const ModelAsset* GetModel(const std::string& id) const;
 	private:
 
 		Assimp::Importer m_importer;
@@ -169,7 +169,7 @@ namespace MMMEngine {
 				aiProcess_ConvertToLeftHanded
 			};
 		}
-		std::unordered_map<std::string, ModelAsset>sModelCache;
+		//std::unordered_map<std::string, ModelAsset>sModelCache;
 	};
 }
 

@@ -6,7 +6,7 @@ RTTR_REGISTRATION
 	using namespace rttr;
 	using namespace MMMEngine;
 
-	registration::class_<Mesh_Vertex>("Mesh_Vertex")
+	registration::class_<MMMEngine::Mesh_Vertex>("Mesh_Vertex")
 		.constructor<>()
 		.property("Pos", &Mesh_Vertex::Pos)
 		.property("Normal", &Mesh_Vertex::Normal)
@@ -15,11 +15,11 @@ RTTR_REGISTRATION
 		.property("BoneIndices", &Mesh_Vertex::BoneIndices)
 		.property("BoneWeights", &Mesh_Vertex::BoneWeights);
 
-	auto reg = registration::class_<Mesh_BoneBuffer>("Mesh_BoneBuffer")
+	auto reg = registration::class_<MMMEngine::Mesh_BoneBuffer>("Mesh_BoneBuffer")
 		.constructor<>()
 		.property("BoneMat", &Mesh_BoneBuffer::BoneMat);
 
-	registration::class_<MeshData>("MeshData")
+	registration::class_<MMMEngine::MeshData>("MeshData")
 		.property("vertices", &MeshData::vertices)
 		.property("indices", &MeshData::indices);
 }

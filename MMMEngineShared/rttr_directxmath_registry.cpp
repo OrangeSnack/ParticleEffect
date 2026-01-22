@@ -7,6 +7,12 @@ RTTR_REGISTRATION
 	using namespace DirectX;
 	using namespace rttr;
 
+	registration::class_<XMFLOAT2>("XMFLOAT2")
+		.constructor<>()
+		.constructor<float, float>()
+		.property("x", &XMFLOAT2::x)
+		.property("y", &XMFLOAT2::y);
+
 	registration::class_<XMFLOAT3>("XMFLOAT3")
 		.constructor<>()
 		.constructor<float, float, float>()
