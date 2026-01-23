@@ -6,6 +6,8 @@
 using namespace MMMEngine::EditorRegistry;
 using namespace DirectX::SimpleMath;
 using namespace DirectX;
+#include "DragAndDrop.h"
+#include "StringHelper.h"
 
 #include <optional>
 
@@ -60,6 +62,8 @@ void RenderProperties(rttr::instance inst)
         s_lastCachedObject = g_selectedGameObject;
     }
 
+
+
     auto t = inst.get_derived_type();
     rttr::property p = t.get_property("MUID");
     rttr::variant v = p.get_value(inst);
@@ -88,6 +92,7 @@ void RenderProperties(rttr::instance inst)
 
         const std::string name = prop.get_name().to_string();
         const bool readOnly = prop.is_readonly();
+        rttr::type propType = prop.get_type();
 
         if (var.is_type<Vector3>())
         {
@@ -108,6 +113,42 @@ void RenderProperties(rttr::instance inst)
             if (changed && !readOnly)
                 prop.set_value(inst, Vector3(data[0], data[1], data[2]));
         }
+        else if (propType.is_enumeration())
+        {
+            rttr::enumeration enumType = propType.get_enumeration();
+            std::string currentName = enumType.value_to_name(var).to_string();
+
+            if (readOnly) ImGui::BeginDisabled(true);
+
+            if (ImGui::BeginCombo(name.c_str(), currentName.c_str()))
+            {
+                auto enumNames = enumType.get_names();
+                for (const auto& enumName : enumNames)
+                {
+                    std::string enumNameStr = enumName.to_string();
+                    bool isSelected = (enumNameStr == currentName);
+
+                    if (ImGui::Selectable(enumNameStr.c_str(), isSelected))
+                    {
+                        if (!readOnly)
+                        {
+                            rttr::variant newValue = enumType.name_to_value(enumName);
+                            if (newValue.is_valid())
+                            {
+                                prop.set_value(inst, newValue);
+                            }
+                        }
+                    }
+
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
+            if (readOnly) ImGui::EndDisabled();
+        }
+
         else if (var.is_type<float>())
         {
             float f = var.get_value<float>();
@@ -243,6 +284,24 @@ void RenderProperties(rttr::instance inst)
     ImGui::PopID();
 }
 
+void AddComponentFromDropFilePath(std::string filePath)
+{
+    if (!filePath.empty())
+    {
+        std::string ext = Utility::StringHelper::ExtractFileFormat(filePath);
+        if (ext != "cpp" && ext != "h")
+            return;
+
+        std::string typeName = Utility::StringHelper::ExtractFileName(filePath);
+        rttr::type t = rttr::type::get_by_name(typeName);
+
+        if (t.is_valid())
+        {
+            g_selectedGameObject->AddComponent(t);
+        }
+    }
+}
+
 void MMMEngine::Editor::InspectorWindow::Render()
 {
 	if (!g_editor_window_inspector)
@@ -364,42 +423,75 @@ void MMMEngine::Editor::InspectorWindow::Render()
 
         ImGui::Separator();
 
-        float width = ImGui::GetContentRegionAvail().x;
-        if (ImGui::Button(u8"컴포넌트 추가", ImVec2{ width, 0 })) { ImGui::OpenPopup(u8"컴포넌트 선택"); }
 
-        //// script drag and drop area
-        //ImGui.InvisibleButton("##", ImGui.GetContentRegionAvail());
-        //string file = DragAndDrop.GetString("file_path");
-        //if (file != null)
-        //{
-        //    string relative = Path.GetRelativePath(ProjectManager.projectRoot, file);
-        //    string extension = Path.GetExtension(relative);
-
-        //    // if file is script
-        //    if (extension == ".cs")
-        //    {
-        //        var type = ScriptManager.GetClassTypeOfScript(file);
-        //        HierarchyWindow.selectedGameObject.AddComponentOfType(type);
-        //    }
-        //}
 
         // add component popup
+        float width = ImGui::GetContentRegionAvail().x;
+        if (ImGui::Button(u8"컴포넌트 추가", ImVec2{ width, 0 }))
+        {
+            ImGui::OpenPopup(u8"컴포넌트 선택");
+        }
+
+        // add component popup
+        static char searchBuffer[256] = "";
         int selectedIndex = -1;
+
         if (ImGui::BeginPopup(u8"컴포넌트 선택"))
         {
             RefreshComponentTypes();
+
+            // 검색 입력 필드
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::IsWindowAppearing())
+            {
+                ImGui::SetKeyboardFocusHere();
+                searchBuffer[0] = '\0'; // 팝업 열릴 때마다 검색어 초기화
+            }
+            ImGui::InputTextWithHint("##search", u8"검색...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+            ImGui::Separator();
+
+            // 스크롤 영역 (최대 8개 항목 높이)
+            const float itemHeight = ImGui::GetTextLineHeightWithSpacing();
+            const float maxHeight = itemHeight * 8;
+
+            ImGui::BeginChild("ComponentList", ImVec2(300, maxHeight), false);
+
+            std::string searchStr = searchBuffer;
+            std::transform(searchStr.begin(), searchStr.end(), searchStr.begin(), ::tolower);
+
             for (int i = 0; i < g_componentTypes.size(); ++i)
             {
                 auto type = g_componentTypes[i];
-                if (ImGui::Selectable(type.get_name().to_string().c_str()))
+                std::string typeName = type.get_name().to_string();
+
+                // 검색 필터링
+                if (searchStr.length() > 0)
+                {
+                    std::string lowerTypeName = typeName;
+                    std::transform(lowerTypeName.begin(), lowerTypeName.end(), lowerTypeName.begin(), ::tolower);
+
+                    if (lowerTypeName.find(searchStr) == std::string::npos)
+                        continue;
+                }
+
+                if (ImGui::Selectable(typeName.c_str()))
                 {
                     selectedIndex = i;
                     auto selected = g_componentTypes[selectedIndex];
                     g_selectedGameObject->AddComponent(type);
+                    ImGui::CloseCurrentPopup();
                 }
             }
+
+            ImGui::EndChild();
             ImGui::EndPopup();
         }
+
+        // script drag and drop area
+        ImGui::InvisibleButton("##", ImGui::GetContentRegionAvail());
+        std::string file = Editor::GetString("FILE_PATH");
+        AddComponentFromDropFilePath(file);
     }
     else
     {
