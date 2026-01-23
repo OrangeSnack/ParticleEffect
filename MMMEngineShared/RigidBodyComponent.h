@@ -138,10 +138,10 @@ namespace MMMEngine {
 
 		Vector3 GetRequestedPos() { return m_RequestedPos; }
 		Quaternion GetRequestedRot() { return m_RequestedRot; }
-		void AttachShapeOnly(physx::PxShape* shape);
-		void SetType_Internal();
-		bool HasPendingTypeChange();
-		void OffPendingType();
+		//void AttachShapeOnly(physx::PxShape* shape);
+		//void SetType_Internal();
+		//bool HasPendingTypeChange();
+		//void OffPendingType();
 
 	private:
 		Desc m_Desc;

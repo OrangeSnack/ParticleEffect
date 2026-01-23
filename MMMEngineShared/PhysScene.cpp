@@ -416,7 +416,7 @@ void MMMEngine::PhysScene::PushRigidsToPhysics()
 void MMMEngine::PhysScene::ChangeRigidType(MMMEngine::RigidBodyComponent* rb, const CollisionMatrix& matrix)
 {
 	if (!m_scene || !rb) return;
-	if (!rb->HasPendingTypeChange()) return;
+	//if (!rb->HasPendingTypeChange()) return;
 
 	const bool registered = (m_rigids.find(rb) != m_rigids.end());
 
@@ -438,7 +438,7 @@ void MMMEngine::PhysScene::ChangeRigidType(MMMEngine::RigidBodyComponent* rb, co
 
 	//새 actor 생성
 	auto& physics = PhysicX::Get().GetPhysics();
-	rb->SetType_Internal();
+	//rb->SetType_Internal();
 	rb->CreateActor(&physics, rb->GetRequestedPos(), rb->GetRequestedRot());
 
 	auto* newActor = rb->GetPxActor();
@@ -457,7 +457,7 @@ void MMMEngine::PhysScene::ChangeRigidType(MMMEngine::RigidBodyComponent* rb, co
 		col->SetFilterData(matrix.MakeSimFilter(layer), matrix.MakeQueryFilter(layer));
 
 		// actor에 shape만 붙이기 (rb->AttachCollider(관리형) 대신)
-		rb->AttachShapeOnly(shape);
+		//rb->AttachShapeOnly(shape);
 	}
 
 	//씬에 다시 등록
@@ -470,6 +470,6 @@ void MMMEngine::PhysScene::ChangeRigidType(MMMEngine::RigidBodyComponent* rb, co
 	//질량/관성 재계산은 dynamic일 때만
 	if (auto* dyn = newActor->is<physx::PxRigidDynamic>())
 		physx::PxRigidBodyExt::updateMassAndInertia(*dyn, rb->GetMass());
-	rb->OffPendingType();
+	//rb->OffPendingType();
 }
 

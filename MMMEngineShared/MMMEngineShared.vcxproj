@@ -127,6 +127,7 @@
       <RemoveUnreferencedCodeData />
       <UseFullPaths>false</UseFullPaths>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>NotSet</SubSystem>

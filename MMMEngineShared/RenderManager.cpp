@@ -194,6 +194,9 @@ namespace MMMEngine {
 		// DSV 생성
 		HR_T(m_pDevice->CreateDepthStencilView(m_pSceneDSB.Get(), nullptr, m_pSceneDSV.GetAddressOf()));
 
+		m_sceneWidth = m_clientWidth;
+		m_sceneHeight = m_clientHeight;
+
 		// 씬 뷰포트 설정
 		m_sceneViewport.TopLeftX = 0.0f;
 		m_sceneViewport.TopLeftY = 0.0f;
@@ -229,7 +232,8 @@ namespace MMMEngine {
 
 		bd.ByteWidth = sizeof(Render_CamBuffer);
 		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCambuffer.GetAddressOf()));
-}
+
+	}
 	void RenderManager::ShutDown()
 	{
 		// COM객체 초기화
@@ -409,7 +413,7 @@ namespace MMMEngine {
 
 		// Clear
 		m_pDeviceContext->ClearRenderTargetView(m_pSceneRTV.Get(), m_backColor);
-		m_pDeviceContext->ClearDepthStencilView(m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		m_pDeviceContext->ClearDepthStencilView(m_pSceneDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 		// 캠 버퍼 업데이트
 		m_camMat.camPos = XMMatrixInverse(nullptr, m_viewMatrix).r[3];
@@ -426,7 +430,7 @@ namespace MMMEngine {
 
 		m_pDeviceContext->RSSetViewports(1, &m_sceneViewport);
 		m_pDeviceContext->RSSetState(m_pDefaultRS.Get());
-		m_pDeviceContext->OMSetRenderTargets(1, reinterpret_cast<ID3D11RenderTargetView* const*>(m_pSceneRTV.GetAddressOf()), m_pDepthStencilView.Get());
+		m_pDeviceContext->OMSetRenderTargets(1, reinterpret_cast<ID3D11RenderTargetView* const*>(m_pSceneRTV.GetAddressOf()), m_pSceneDSV.Get());
 
 		// RenderPass
 		for (const auto& pass : m_Passes) {

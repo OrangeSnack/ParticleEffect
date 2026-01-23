@@ -21,6 +21,8 @@ using namespace MMMEngine::Utility;
 #include "ScriptBuildWindow.h"
 #include "ConsoleWindow.h"
 #include "FilesWindow.h"
+#include "SceneViewWindow.h"
+#include "GameViewWindow.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -298,6 +300,8 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
             ImGui::MenuItem(u8"«œ¿ÃæÓ∂Û≈∞", nullptr, &g_editor_window_hierarchy);
             ImGui::MenuItem(u8"¿ŒΩ∫∆Â≈Õ", nullptr, &g_editor_window_inspector);
             ImGui::MenuItem(u8"∆ƒ¿œ ∫‰æÓ", nullptr, &g_editor_window_files);
+            ImGui::MenuItem(u8"æ¿ ∫‰", nullptr, &g_editor_window_sceneView);
+            ImGui::MenuItem(u8"∞‘¿” ∫‰", nullptr, &g_editor_window_gameView);
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu(u8"∫ÙµÂ"))
@@ -335,6 +339,8 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
     SceneListWindow::Get().Render();
     HierarchyWindow::Get().Render();
     InspectorWindow::Get().Render();
+    SceneViewWindow::Get().Render();
+    GameViewWindow::Get().Render();
 }
 
 void MMMEngine::Editor::ImGuiEditorContext::EndFrame()
