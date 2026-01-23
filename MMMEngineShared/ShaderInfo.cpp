@@ -7,9 +7,29 @@
 
 namespace fs = std::filesystem;
 
-MMMEngine::ShaderInfo::ShaderInfo()
+DEFINE_SINGLETON(MMMEngine::ShaderInfo);
+
+Microsoft::WRL::ComPtr<ID3D11ShaderReflection> MMMEngine::ShaderInfo::MakeShaderReflection(ID3DBlob* _byteCode)
 {
-	// 텍스쳐 프로퍼티 타입정의
+	Microsoft::WRL::ComPtr<ID3D11ShaderReflection> reflection;
+
+	HR_T(D3DReflect(
+		_byteCode->GetBufferPointer(),
+		_byteCode->GetBufferSize(),
+		IID_ID3D11ShaderReflection,
+		(void**)reflection.GetAddressOf()));
+
+	return reflection;
+}
+
+void MMMEngine::ShaderInfo::DeSerialize()
+{
+	//m_SRMap[ShaderType::PBR] = 
+}
+
+void MMMEngine::ShaderInfo::StartUp()
+{
+	/*// 텍스쳐 프로퍼티 타입정의
 	m_typeInfo[S_PBR][L"basecolor"] = PropertyType::Texture;
 	m_typeInfo[S_PBR][L"normal"] = PropertyType::Texture;
 	m_typeInfo[S_PBR][L"emissive"] = PropertyType::Texture;
@@ -45,29 +65,8 @@ MMMEngine::ShaderInfo::ShaderInfo()
 	// 상수버퍼번호 하드코딩
 	m_CBIndexMap[S_PBR][L"S_PBR_materialbuffer"] = 3;
 
-	m_CBBufferMap[L"pbr_materialbuffer"] = CreateConstantBuffer<Render_LightBuffer>();
-}
+	m_CBBufferMap[L"pbr_materialbuffer"] = CreateConstantBuffer<Render_LightBuffer>();*/
 
-Microsoft::WRL::ComPtr<ID3D11ShaderReflection> MMMEngine::ShaderInfo::MakeShaderReflection(ID3DBlob* _byteCode)
-{
-	Microsoft::WRL::ComPtr<ID3D11ShaderReflection> reflection;
-
-	HR_T(D3DReflect(
-		_byteCode->GetBufferPointer(),
-		_byteCode->GetBufferSize(),
-		IID_ID3D11ShaderReflection,
-		(void**)reflection.GetAddressOf()));
-
-	return reflection;
-}
-
-void MMMEngine::ShaderInfo::DeSerialize()
-{
-	//m_SRMap[ShaderType::PBR] = 
-}
-
-void MMMEngine::ShaderInfo::StartUp()
-{
 	DeSerialize();
 }
 

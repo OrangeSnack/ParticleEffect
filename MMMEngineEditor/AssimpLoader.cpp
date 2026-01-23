@@ -709,14 +709,11 @@ void MMMEngine::AssimpLoader::RegisterModel(const std::wstring path, ModelType t
 		filename = fPath.stem().wstring();
 	}
 
-	auto currentProjectFS = Editor::ProjectManager::Get().GetActiveProject().ProjectRootFS();
-
 	switch (type)
 	{
 	case MMMEngine::ModelType::Static:
 		staticMesh = ConvertStaticMesh(&model);
-		currentProjectFS = currentProjectFS / fs::path(m_exportPath);
-		ResourceSerializer::Get().Serialize_StaticMesh(staticMesh.get(), currentProjectFS.wstring(), filename);
+		ResourceSerializer::Get().Serialize_StaticMesh(staticMesh.get(), m_exportPath, filename);
 		break;
 	case MMMEngine::ModelType::Animated:
 		skeletalMesh = ConvertSkeletalMesh(&model);

@@ -53,7 +53,6 @@ namespace MMMEngine {
 	class MMMENGINE_API ShaderInfo : public Utility::ExportSingleton<ShaderInfo>
 	{
 	private:
-		ShaderInfo();
 		// 쉐이더타입별 프로퍼티 정의 <PropertyName, PropertyInfo>
 		std::unordered_map<ShaderType, std::unordered_map<std::wstring, PropertyType>> m_typeInfo;
 		// 텍스쳐 버퍼인덱스 주는 맵 <propertyName, index> (int == shader tN)

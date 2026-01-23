@@ -5,7 +5,6 @@
 #include "VShader.h"
 #include "PShader.h"
 #include "StringHelper.h"
-#include "../MMMEngineEditor/ProjectManager.h"
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -97,7 +96,7 @@ fs::path MMMEngine::MaterialSerializer::Serealize(Material* _material, std::wstr
 	
 	std::vector<uint8_t> v = json::to_msgpack(snapshot);
 
-	fs::path savePath(Editor::ProjectManager::Get().GetActiveProject().ProjectRootFS());
+	fs::path savePath(ResourceManager::Get().GetCurrentRootPath());
 
 	fs::path p(_path);
 	p = p / (_name + L"_Material" + std::to_wstring(_index) + L".material");
@@ -121,7 +120,7 @@ fs::path MMMEngine::MaterialSerializer::Serealize(Material* _material, std::wstr
 void MMMEngine::MaterialSerializer::UnSerealize(Material* _material, std::wstring _path)
 {
 	// 경로 만들기
-	fs::path loadPath(Editor::ProjectManager::Get().GetActiveProject().ProjectRootFS());
+	fs::path loadPath(ResourceManager::Get().GetCurrentRootPath());
 	loadPath = loadPath / _path;
 
 	// 파일 읽기
