@@ -250,18 +250,6 @@ namespace MMMEngine {
 	{
 		// 버퍼 기본색상
 		m_ClearColor = DirectX::SimpleMath::Vector4(0.45f, 0.55f, 0.60f, 1.00f);
-
-		// 텍스쳐 버퍼번호 하드코딩
-		// TODO :: 이거 여기있으면 안될거같음
-		m_propertyMap[L"basecolor"] = 0;
-		m_propertyMap[L"normal"] = 1;
-		m_propertyMap[L"emissive"] = 2;
-		m_propertyMap[L"shadowmap"] = 3;
-		m_propertyMap[L"opacity"] = 4;
-
-		m_propertyMap[L"metalic"] = 30;
-		m_propertyMap[L"roughness"] = 31;
-		m_propertyMap[L"ao"] = 32;
 	}
 
 	void RenderManager::SetWorldMatrix(DirectX::SimpleMath::Matrix& _world)
@@ -458,12 +446,12 @@ namespace MMMEngine {
 		m_pSwapChain->Present(m_rSyncInterval, 0);
 	}
 
-	const int RenderManager::PropertyToIdx(const std::wstring& _propertyName) const
+	/*const int RenderManager::PropertyToIdx(const std::wstring& _propertyName) const
 	{
 		auto it = m_propertyMap.find(_propertyName);
 		if (it == m_propertyMap.end())
 			return -1;
 
 		return it->second;
-	}
+	}*/
 }
