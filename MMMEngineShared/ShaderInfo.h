@@ -22,7 +22,7 @@ namespace MMMEngine {
 		S_SKYBOX = 3,
 	};
 
-	// -- 상수 정보는 만들고 cpp 생성자에 같은양식으로 등록할것!! --
+	// -- 상수 정보 만들고 스타트업, json에 같은양식으로 등록할것!! --
 	struct Render_LightBuffer {
 		DirectX::SimpleMath::Vector4 mLightDir;
 		DirectX::SimpleMath::Vector4 mLightColor;
@@ -50,26 +50,32 @@ namespace MMMEngine {
 		Constant = 1,
 	};
 
+	struct CBPropertyInfo {
+		std::wstring bufferName;
+		UINT offset;	// 상수버퍼 내에서 해당 변수의 시작 위치(바이트 단위)
+		UINT size;		// 변수의 크기(바이트 단위)
+	};
+
 	class MMMENGINE_API ShaderInfo : public Utility::ExportSingleton<ShaderInfo>
 	{
 	private:
-		// 쉐이더타입별 프로퍼티 정의 <PropertyName, PropertyInfo>
+		// 쉐이더 타입정의 < ShaderPath, ShaderType >
+		std::unordered_map<std::wstring, ShaderType> m_shaderTypeMap;
+		// 쉐이더타입별 메테리얼 프로퍼티 정의 <PropertyName, PropertyInfo>
 		std::unordered_map<ShaderType, std::unordered_map<std::wstring, PropertyType>> m_typeInfo;
 		// 텍스쳐 버퍼인덱스 주는 맵 <propertyName, index> (int == shader tN)
-		std::unordered_map<ShaderType, std::unordered_map<std::wstring, int>> m_matPropertyMap;
+		std::unordered_map<ShaderType, std::unordered_map<std::wstring, int>> m_texPropertyMap;
 		// 상수버퍼 타입정의 맵 <propertyName, constantBufferName> (wstring == m_CBMap Key)
-		std::unordered_map<ShaderType, std::unordered_map<std::wstring, std::wstring>> m_matCBPropertyMap;
+		std::unordered_map<ShaderType, std::unordered_map<std::wstring, std::wstring>> m_CBPropertyMap;
 		// 상수버퍼 인덱스 주는 맵 <constantBufferName, index> (int == shader bN)
 		std::unordered_map<ShaderType, std::unordered_map<std::wstring, int>> m_CBIndexMap;
+
 		// 상수버퍼 저장용 맵 <constantBufferName, ID3D11Buffer>
 		std::unordered_map<std::wstring, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_CBBufferMap;
-
-		// 리플렉션 저장용 맵 <ShaderType, Reflection>
-		std::unordered_map<ShaderType, Microsoft::WRL::ComPtr<ID3D11ShaderReflection>> m_SRMap;
-
+		// 상수버퍼 오프셋 맵 <constantBufferName, <propertyName, offset>>
+		std::unordered_map<std::wstring, std::unordered_map<std::wstring, CBPropertyInfo>> m_CBPropertyOffsetMap;
 		
-		
-		Microsoft::WRL::ComPtr<ID3D11ShaderReflection> MakeShaderReflection(ID3DBlob* _byteCode);
+		void CreateShaderReflection(std::wstring&& _filePath, ShaderType _type);
 
 		template<typename T>
 		Microsoft::WRL::ComPtr<ID3D11Buffer> CreateConstantBuffer();
@@ -78,7 +84,14 @@ namespace MMMEngine {
 	public:
 		void StartUp();
 		void ShutDown();
+
+	public:
+		const ShaderType GetShaderType(std::wstring&& _shaderPath);
 		const int PropertyToIdx(const ShaderType _type, const std::wstring& _propertyName, PropertyType* _out = nullptr) const;
+		void MMMEngine::ShaderInfo::UpdateProperty(ID3D11DeviceContext* context,
+			const ShaderType shaderType,
+			const std::wstring& propertyName,
+			const void* data);
 	};
 
 	template<typename T>
