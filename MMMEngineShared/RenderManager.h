@@ -107,6 +107,11 @@ namespace MMMEngine
 
 		Microsoft::WRL::ComPtr<ID3D11RenderTargetView1> GetSceneRTV() { return m_pSceneRTV; }
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView1> GetSceneSRV() { return m_pSceneSRV; }
+		void GetSceneSize(UINT& outWidth, UINT& outHeight) 
+		{ 
+			outWidth = m_sceneWidth; 
+			outHeight = m_sceneHeight; 
+		}
 
 		void BeginFrame();
 		void Render();

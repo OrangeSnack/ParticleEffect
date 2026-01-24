@@ -21,6 +21,7 @@
 #include "BuildManager.h"
 #include "DLLHotLoadHelper.h"
 #include "PhysX.h"
+#include "ShaderInfo.h"
 
 namespace fs = std::filesystem;
 using namespace MMMEngine;
@@ -50,6 +51,8 @@ void Initialize()
 	auto hwnd = app->GetWindowHandle();
 	auto windowInfo = app->GetWindowInfo();
 
+	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
+	ShaderInfo::Get().StartUp();
 	InputManager::Get().StartUp(hwnd);
 	app->OnWindowSizeChanged.AddListener<InputManager, &InputManager::HandleWindowResize>(&InputManager::Get());
 	
@@ -73,7 +76,7 @@ void Initialize()
 
 	}
 
-	RenderManager::Get().StartUp(hwnd, windowInfo.width, windowInfo.height);
+
 	app->OnWindowSizeChanged.AddListener<RenderManager, &RenderManager::ResizeSwapChainSize>(&RenderManager::Get());
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device = RenderManager::Get().GetDevice();
@@ -84,6 +87,7 @@ void Initialize()
 
 	MMMEngine::PhysicX::Get().Initialize();
 	SceneManager::Get().onSceneInitBefore.AddListenerLambda([]() { 
+		PhysxManager::Get().UnbindScene();
 		MMMEngine::PhysxManager::Get().BindScene(SceneManager::Get().GetCurrentSceneRaw());
 		});
 }
@@ -150,10 +154,6 @@ void Update()
 
 			MMMEngine::PhysxManager::Get().StepFixed(fixedDt);
 			BehaviourManager::Get().BroadCastBehaviourMessage("FixedUpdate");
-			//PhysicsManager::Get()->PreSyncPhysicsWorld();
-			//PhysicsManager::Get()->PreApplyTransform();
-			//PhysicsManager::Get()->Simulate(fixedDt);
-			//PhysicsManager::Get()->ApplyTransform();
 		});
 
 	RenderManager::Get().BeginFrame();

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -121,6 +121,7 @@
       <ForceConformanceInForLoopScope />
       <RemoveUnreferencedCodeData />
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <DisableSpecificWarnings> 4819</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,8 +154,11 @@
     <ClInclude Include="DLLHotLoadHelper.h" />
     <ClInclude Include="DragAndDrop.h" />
     <ClInclude Include="EditorCamera.h" />
+    <ClInclude Include="EditorGridRenderer.h" />
     <ClInclude Include="EditorRegistry.h" />
+    <ClInclude Include="EditorShader.h" />
     <ClInclude Include="FilesWindow.h" />
+    <ClInclude Include="GameViewWindow.h" />
     <ClInclude Include="HierarchyWindow.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_null.h" />
@@ -171,6 +175,7 @@
     <ClInclude Include="Project.h" />
     <ClInclude Include="ProjectManager.h" />
     <ClInclude Include="SceneListWindow.h" />
+    <ClInclude Include="SceneViewWindow.h" />
     <ClInclude Include="ScriptBuildWindow.h" />
     <ClInclude Include="StartUpProjectWindow.h" />
   </ItemGroup>
@@ -181,7 +186,9 @@
     <ClCompile Include="BuildManager.cpp" />
     <ClCompile Include="DLLHotLoadHelper.cpp" />
     <ClCompile Include="EditorCamera.cpp" />
+    <ClCompile Include="EditorGridRenderer.cpp" />
     <ClCompile Include="FilesWindow.cpp" />
+    <ClCompile Include="GameViewWindow.cpp" />
     <ClCompile Include="HierarchyWindow.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_null.cpp" />
@@ -197,6 +204,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ProjectManager.cpp" />
     <ClCompile Include="SceneListWindow.cpp" />
+    <ClCompile Include="SceneViewWindow.cpp" />
     <ClCompile Include="ScriptBuildWindow.cpp" />
     <ClCompile Include="StartUpProjectWindow.cpp" />
   </ItemGroup>
