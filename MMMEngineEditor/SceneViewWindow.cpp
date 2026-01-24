@@ -3,6 +3,9 @@
 #include "EditorRegistry.h"
 #include "RenderStateGuard.h"
 #include "RenderManager.h"
+#include <ImGuizmo.h>
+#include "Transform.h"
+#include <imgui_internal.h>
 
 using namespace MMMEngine::Editor;
 using namespace MMMEngine;
@@ -46,15 +49,11 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 		return;
 
 	ResizeRenderTarget(m_cachedDevice, m_lastWidth, m_lastHeight);
-
 	RenderSceneToTexture(m_cachedContext);
 
 	ImGuiWindowClass wc;
-	// 핵심: 메인 뷰포트에 이 윈도우를 종속시킵니다.
-	// 이렇게 하면 메인 창을 클릭해도 이 창이 '메인 창의 일부'로서 취급되어 우선순위를 가집니다.
 	wc.ParentViewportId = ImGui::GetMainViewport()->ID;
-	wc.ViewportFlagsOverrideSet = ImGuiViewportFlags_NoFocusOnAppearing; // 필요 시 설정
-
+	wc.ViewportFlagsOverrideSet = ImGuiViewportFlags_NoFocusOnAppearing;
 	ImGui::SetNextWindowClass(&wc);
 
 	ImGuiStyle& style = ImGui::GetStyle();
@@ -75,12 +74,10 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 
 	// 사용 가능한 영역 크기 가져오기
 	ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
 	m_lastWidth = viewportSize.x;
 	m_lastHeight = viewportSize.y;
 
-	// 크기가 변경되었으면 렌더 타겟 리사이즈 필요
-	// 실제 리사이즈는 다음 프레임의 Render에서 수행
+	auto scenecornerpos = ImGui::GetCursorPos();
 
 	// ImGui에 텍스처 렌더링
 	if (m_pSceneSRV)
@@ -92,12 +89,121 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 			ImVec2(1, 1)
 		);
 	}
+	// ImGuizmo는 별도의 DrawList에 그려짐
+	if (g_selectedGameObject.IsValid())
+	{
+		ImVec2 imagePos = ImGui::GetItemRectMin();  // 방금 그린 Image의 좌상단 (화면 좌표)
+		ImVec2 imageMax = ImGui::GetItemRectMax();
+		ImVec2 imageSize = ImVec2(imageMax.x - imagePos.x, imageMax.y - imagePos.y);
 
+		ImGuizmo::SetRect(imagePos.x, imagePos.y, imageSize.x, imageSize.y);
+
+		ImGuizmo::SetDrawlist(ImGui::GetWindowDrawList());
+		ImGuizmo::SetOrthographic(false);
+
+		auto viewMat = m_pCam->GetViewMatrix();
+		auto projMat = m_pCam->GetProjMatrix();
+		auto modelMat = g_selectedGameObject->GetTransform()->GetWorldMatrix(); // 값이라도 로컬에 저장
+
+		float* viewPtr = &viewMat.m[0][0];
+		float* projPtr = &projMat.m[0][0];
+		float* modelPtr = &modelMat.m[0][0];
+
+		ImGuizmo::Manipulate(viewPtr, projPtr, m_guizmoOperation, m_guizmoMode, modelPtr);
+
+		if (ImGuizmo::IsUsing())
+		{
+			Vector3 t, s;
+			Quaternion r;
+			modelMat.Decompose(s, r, t);
+
+			auto tr = g_selectedGameObject->GetTransform();
+
+			// 회전 중에는 scale 드리프트를 막기 위해 기존 스케일 유지
+			if (m_guizmoOperation == ImGuizmo::ROTATE)
+				s = tr->GetWorldScale();
+
+			r.Normalize(); // 쿼터니언도 정규화 추천
+
+			tr->SetWorldPosition(t);
+			tr->SetWorldRotation(r);
+			tr->SetWorldScale(s);
+		}
+	}
+
+	{
+		auto buttonsize = ImVec2(0, 0);
+		auto padding = ImVec2{ 10,10 };
+		auto moving = m_guizmoOperation == ImGuizmo::OPERATION::TRANSLATE;
+		auto rotating = m_guizmoOperation == ImGuizmo::OPERATION::ROTATE;
+		auto scaling = m_guizmoOperation == ImGuizmo::OPERATION::SCALE;
+		auto local = m_guizmoMode == ImGuizmo::MODE::LOCAL;
+		auto world = m_guizmoMode == ImGuizmo::MODE::WORLD;
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.7f, 0.7f, 0.7f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.9f, 0.9f, 1.0f));
+
+		ImGui::SetCursorPos(scenecornerpos + padding);
+		// Move 버튼
+		ImGui::BeginDisabled(moving);
+		if (ImGui::Button(u8"\uf047 move", buttonsize))
+		{
+			m_guizmoOperation = ImGuizmo::TRANSLATE;
+		}
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+
+		// Rotate 버튼
+		ImGui::BeginDisabled(rotating);
+		if (ImGui::Button(u8"\uf2f1 rotate", buttonsize))
+		{
+			m_guizmoOperation = ImGuizmo::ROTATE;
+		}
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+
+		// Scale 버튼
+		ImGui::BeginDisabled(scaling);
+		if (ImGui::Button(u8"\uf31e scale", buttonsize))
+		{
+			m_guizmoOperation = ImGuizmo::SCALE;
+		}
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+
+		// 구분선
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+
+		ImGui::SameLine();
+
+		// Local 버튼
+		ImGui::BeginDisabled(local);
+		if (ImGui::Button(u8"\uf1b2 local", buttonsize))
+		{
+			m_guizmoMode = ImGuizmo::LOCAL;
+		}
+		ImGui::EndDisabled();
+
+		ImGui::SameLine();
+
+		// World 버튼
+		ImGui::BeginDisabled(world);
+		if (ImGui::Button(u8"\uf0ac world", buttonsize))
+		{
+			m_guizmoMode = ImGuizmo::WORLD;
+		}
+		ImGui::EndDisabled();
+
+		ImGui::PopStyleColor(3);
+	}
 
 	ImGui::End();
 	ImGui::PopStyleVar();
 }
-
 bool MMMEngine::Editor::SceneViewWindow::CreateRenderTargets(ID3D11Device* device, int width, int height)
 {
 	// 기존 리소스 해제
