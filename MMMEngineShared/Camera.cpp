@@ -10,7 +10,7 @@ RTTR_REGISTRATION
 	using namespace rttr;
 	using namespace MMMEngine;
 
-	registration::class_<Camera>("MeshRenderer")
+	registration::class_<Camera>("Camera")
 		(rttr::metadata("wrapper_type", rttr::type::get<ObjPtr<Camera>>()))
 		.property("FOV", &Camera::GetFov, &Camera::SetFOV)
 		.property("Near", &Camera::GetNear, &Camera::SetNear)
@@ -41,8 +41,11 @@ const DirectX::SimpleMath::Matrix& MMMEngine::Camera::GetViewMatrix()
 {
 	if (m_isViewMatrixDirty)
 	{
-		m_cachedViewMatrix = GetTransform()->GetWorldMatrix().Invert();
-		m_isViewMatrixDirty = false;
+		if (GetTransform().IsValid())
+		{
+			m_cachedViewMatrix = GetTransform()->GetWorldMatrix().Invert();
+			m_isViewMatrixDirty = false;
+		}
 	}
 
 	return m_cachedViewMatrix;
@@ -68,7 +71,8 @@ void MMMEngine::Camera::Initialize()
 {
 	Behaviour::Initialize();
 
-	GetTransform()->onMatrixUpdate.AddListener<Camera, &Camera::MarkViewMatrixDirty>(this);
+	if(GetTransform().IsValid())
+		GetTransform()->onMatrixUpdate.AddListener<Camera, &Camera::MarkViewMatrixDirty>(this);
 
 	m_fov = 75;
 	m_near = 0.3f;
@@ -83,7 +87,8 @@ void MMMEngine::Camera::UnInitialize()
 {
 	Behaviour::UnInitialize();
 
-	GetTransform()->onMatrixUpdate.RemoveListener<Camera, &Camera::MarkViewMatrixDirty>(this);
+	if (GetTransform().IsValid())
+		GetTransform()->onMatrixUpdate.RemoveListener<Camera, &Camera::MarkViewMatrixDirty>(this);
 }
 
 const float& MMMEngine::Camera::GetFov() noexcept

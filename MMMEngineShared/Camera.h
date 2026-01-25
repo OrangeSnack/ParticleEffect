@@ -8,6 +8,8 @@ namespace MMMEngine
 	class MMMENGINE_API Camera : public Behaviour
 	{
 	private:
+		RTTR_ENABLE(Behaviour)
+		RTTR_REGISTRATION_FRIEND
 		static ObjPtr<Camera> s_mainCam;
 
 		float m_fov; // 0 ~ 360 degree
