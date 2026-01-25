@@ -1,7 +1,10 @@
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #pragma once
 #include "Export.h"
 #include "ExportSingleton.hpp"
-#include <RendererBase.h>
 #include <map>
 #include <vector>
 #include <memory>
@@ -12,9 +15,7 @@
 #include <wrl/client.h>
 #include <SimpleMath.h>
 
-#include <RenderShared.h>
 #include <Object.h>
-#include "json/json.hpp"
 #include <RenderCommand.h>
 
 #pragma comment (lib, "d3d11.lib")
@@ -34,8 +35,6 @@ namespace MMMEngine
 		friend class Material;
 	private:
 		RenderManager();
-		//std::map<int, std::vector<std::shared_ptr<RendererBase>>> m_Passes;
-		//std::queue<std::shared_ptr<RendererBase>> m_initQueue;
 
 		bool useBackBuffer = true;
 		DirectX::SimpleMath::Matrix m_worldMatrix;

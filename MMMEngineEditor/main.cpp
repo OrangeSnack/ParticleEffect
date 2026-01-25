@@ -49,6 +49,9 @@ void AfterProjectLoaded()
 	// 리소스 매니저 부팅
 	ResourceManager::Get().StartUp(projectPath.generic_wstring() + L"/");
 
+	// 쉐이더 인포 시작하기
+	ShaderInfo::Get().StartUp();
+	
 	BuildManager::Get().SetProgressCallbackString([](const std::string& progress) { std::cout << progress.c_str() << std::endl; });
 	ShaderInfo::Get().StartUp();
 }
