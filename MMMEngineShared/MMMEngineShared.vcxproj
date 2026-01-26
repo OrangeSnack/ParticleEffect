@@ -196,6 +196,7 @@
     <ClInclude Include="ExportSingleton.hpp" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GlobalRegistry.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MaterialSerializer.h" />
     <ClInclude Include="MeshRenderer.h" />
@@ -268,6 +269,7 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GlobalRegistry.cpp" />
     <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="Light.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="MaterialSerializer.cpp" />
     <ClCompile Include="MeshRenderer.cpp" />
