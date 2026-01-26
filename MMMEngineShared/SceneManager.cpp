@@ -242,6 +242,11 @@ void MMMEngine::SceneManager::RebulidAndApplySceneList(std::vector<std::string> 
 	}
 }
 
+void MMMEngine::SceneManager::ClearDDOLScene()
+{
+	m_dontDestroyOnLoadScene->Clear();
+}
+
 void MMMEngine::SceneManager::UpdateScenesHash(std::unordered_map<std::string, size_t>&& nameToID) noexcept
 {
 	m_sceneNameToID = std::move(nameToID);

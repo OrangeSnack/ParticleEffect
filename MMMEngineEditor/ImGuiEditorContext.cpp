@@ -471,6 +471,7 @@ void MMMEngine::Editor::ImGuiEditorContext::Render()
                 {
                     auto currenSceneRef = SceneManager::Get().GetCurrentScene();
                     SceneManager::Get().ChangeScene(currenSceneRef.id);
+                    SceneManager::Get().ClearDDOLScene();
                 }
             }
             if (isPlaying) ImGui::PopStyleColor();

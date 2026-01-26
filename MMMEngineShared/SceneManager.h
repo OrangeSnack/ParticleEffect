@@ -39,6 +39,7 @@ namespace MMMEngine
 		void ReloadSnapShotCurrentScene(); // 현재 씬의 스냅샷을 갱신 (하드디스크 저장 X, 온 메모리 체인지)
 		
 		void RebulidAndApplySceneList(std::vector<std::string> sceneList);
+		void ClearDDOLScene();
 
 		std::vector<ObjPtr<GameObject>> GetAllGameObjectInCurrentScene();
 		std::vector<ObjPtr<GameObject>> GetAllGameObjectInDDOL();

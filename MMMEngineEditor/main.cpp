@@ -223,9 +223,20 @@ void Release()
 	DLLHotLoadHelper::CleanupHotReloadCopies(cwd);
 }
 
+#ifdef _DEBUG
 int main()
+#else
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
+#endif
 {
-	App app{ L"MMMEditor",1600,900 };
+#ifdef _DEBUG
+	HINSTANCE hInstance = GetModuleHandle(nullptr);
+#endif
+
+	App app{ hInstance, L"MMMEditor",1600,900 };
 	GlobalRegistry::g_pApp = &app;
 
 	app.OnInitialize.AddListener<&Initialize>();

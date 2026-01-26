@@ -121,7 +121,7 @@
       <ForceConformanceInForLoopScope />
       <RemoveUnreferencedCodeData />
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <DisableSpecificWarnings> 4819</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4819;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,9 +140,10 @@
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)MMMEngineShared\rttr\..;$(SolutionDir)MMMEngineShared\dxtk\Inc;$(SolutionDir)MMMEngineShared\dxtk;$(SolutionDir)MMMEngineShared\physx;$(SolutionDir)MMMEngineShared;$(ProjectDir)imgui-docking\;$(ProjectDir)imgui-docking\backends;$(ProjectDir)ImGuizmo\</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DisableSpecificWarnings>4819;4251</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>rttr_core.lib;assimp-vc143-mt.lib;pugixml.lib;minizip.lib;zlib.lib;kubazip.lib;poly2tri.lib;draco.lib;%(AdditionalDependencies);PhysX_64.lib;PhysXCommon_64.lib;PhysXCooking_64.lib;PhysXExtensions_static_64.lib;PhysXFoundation_64.lib;DirectXTex.lib;DirectXTK.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Common\Lib\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
