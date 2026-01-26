@@ -52,22 +52,23 @@ namespace MMMEngine {
 			for (auto& [prop, val] : _material->GetProperties()) {
 				ShaderType type = ShaderInfo::Get().GetShaderType(PS->GetFilePath());
 
-				if (auto p = std::get_if<int>(&val)) {
-					ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, p);
-				}
-				else if (auto p = std::get_if<float>(&val)) {
-					ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, p);
-				}
-				else if (auto p = std::get_if<DirectX::SimpleMath::Vector3>(&val)) {
-					ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, p);
-				}
-				else if (auto p = std::get_if<DirectX::SimpleMath::Matrix>(&val)) {
-					ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, p);
-				}
-				else if (auto p = std::get_if<ResPtr<MMMEngine::Texture2D>>(&val)) {
-					ID3D11ShaderResourceView* srv = (*p)->m_pSRV.Get();
-					ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, p);
-				}
+				std::visit([&](auto&& arg)
+					{
+						using T = std::decay_t<decltype(arg)>;
+
+						if constexpr (std::is_same_v<T, int> ||
+							std::is_same_v<T, float> ||
+							std::is_same_v<T, DirectX::SimpleMath::Vector3> ||
+							std::is_same_v<T, DirectX::SimpleMath::Matrix>)
+						{
+							ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, &arg);
+						}
+						else if constexpr (std::is_same_v<T, ResPtr<MMMEngine::Texture2D>>)
+						{
+							ID3D11ShaderResourceView* srv = arg->m_pSRV.Get();
+							ShaderInfo::Get().UpdateProperty(m_pDeviceContext.Get(), type, prop, srv);
+						}
+					}, val);
 			}
 		// TODO::상수버퍼 등록
 	}

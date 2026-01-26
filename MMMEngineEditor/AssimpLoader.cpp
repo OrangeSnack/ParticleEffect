@@ -676,7 +676,10 @@ bool MMMEngine::AssimpLoader::ImportModel(const std::wstring& path, ModelType ty
 	out = ModelAsset{};
 	out.type = type;
 
-	const aiScene* scene = ImportScene(path, type);
+	fs::path realPath = ResourceManager::Get().GetCurrentRootPath();
+	realPath = realPath / path;
+
+	const aiScene* scene = ImportScene(realPath.wstring(), type);
 	if (!scene) return false;
 	if (!ExtractNodeTree(scene, out.nodeTree)) return false;
 	std::vector<int> meshToNode;
@@ -685,8 +688,7 @@ bool MMMEngine::AssimpLoader::ImportModel(const std::wstring& path, ModelType ty
 	std::string modelDir;
 	try
 	{
-		std::filesystem::path p(path);
-		modelDir = p.has_parent_path() ? p.parent_path().string() : std::string{};
+		modelDir = realPath.has_parent_path() ? realPath.parent_path().string() : std::string{};
 	}
 	catch (...)
 	{
