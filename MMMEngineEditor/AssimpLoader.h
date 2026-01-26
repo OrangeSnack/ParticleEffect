@@ -150,6 +150,7 @@ namespace MMMEngine {
 		inline ImportOptions StaticModelOptions() {
 			return{
 				ModelType::Static,
+				aiProcess_GlobalScale |
 				aiProcess_Triangulate |
 				aiProcess_GenNormals |
 				aiProcess_CalcTangentSpace |
@@ -160,6 +161,7 @@ namespace MMMEngine {
 		inline ImportOptions AnimatedModelOptions() {
 			return{
 				ModelType::Animated,
+				aiProcess_GlobalScale |
 				aiProcess_Triangulate |
 				aiProcess_GenNormals |
 				aiProcess_CalcTangentSpace |

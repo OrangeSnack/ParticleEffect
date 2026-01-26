@@ -178,13 +178,13 @@ bool MMMEngine::AssimpLoader::ConvertMaterial(const TextureSemantic _sementic, c
 	std::wstring property;
 
 	static const std::unordered_map<TextureSemantic, std::wstring> semanticMap = {
-	{TextureSemantic::BaseColor, L"basecolor"},
-	{TextureSemantic::Normal,    L"normal"},
-	{TextureSemantic::Metallic,  L"metallic"},
-	{TextureSemantic::Roughness, L"roughness"},
-	{TextureSemantic::AO,        L"ao"},
-	{TextureSemantic::Emissive,  L"emissive"},
-	{TextureSemantic::Opacity,   L"opacity"}
+	{TextureSemantic::BaseColor, L"_albedo"},
+	{TextureSemantic::Normal,    L"_normal"},
+	{TextureSemantic::Metallic,  L"_metallic"},
+	{TextureSemantic::Roughness, L"_roughness"},
+	{TextureSemantic::AO,        L"_ambientOcclusion"},
+	{TextureSemantic::Emissive,  L"_emissive"},
+	{TextureSemantic::Opacity,   L"_opacity"}
 	};
 
 	auto it = semanticMap.find(_sementic);
