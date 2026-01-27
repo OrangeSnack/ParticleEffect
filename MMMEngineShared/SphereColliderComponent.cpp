@@ -1,6 +1,7 @@
 ﻿#include "SphereColliderComponent.h"
 #include "rttr/registration"
 #include "PhysxManager.h"
+#include "PhysxHelper.h"
 
 RTTR_REGISTRATION
 {
@@ -61,5 +62,16 @@ void MMMEngine::SphereColliderComponent::BuildShape(physx::PxPhysics* physics, p
 	if (!shape) return;
 
 	SetShape(shape, true);
+}
+
+MMMEngine::ColliderComponent::DebugColliderShapeDesc MMMEngine::SphereColliderComponent::GetDebugShapeDesc() const
+{
+	DebugColliderShapeDesc s_Desc;
+	s_Desc.type = DebugColliderType::Sphere;
+	s_Desc.sphereRadius = m_radius;
+
+	s_Desc.localCenter = ToVec(m_LocalPose.p);
+	s_Desc.localRotation = ToQuat(m_LocalPose.q);
+	return s_Desc;
 }
 
