@@ -100,7 +100,7 @@ namespace MMMEngine {
 			{
 				if (cmd.material != lastMaterial)
 				{
-					// 라이트등록 TODO::포인트라이트 존재시 밖으로 빼야함.
+					// TODO::포인트라이트 만들시 밖으로 빼야함
 					for (auto& light : m_lights)
 						ApplyLightToMat(m_pDeviceContext.Get(), light, cmd.material);
 
@@ -747,7 +747,7 @@ namespace MMMEngine {
 
 			std::swap(m_lights[_idx], m_lights.back());
 			m_lights[_idx]->m_lightIndex = _idx;
-			m_renderers.pop_back();
+			m_lights.pop_back();
 		}
 	}
 }

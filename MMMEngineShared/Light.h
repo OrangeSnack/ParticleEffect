@@ -25,7 +25,7 @@ namespace MMMEngine {
 		std::unordered_map<std::wstring, PropertyValue> m_properties;
 		LightType m_lightType;
 		int m_lightIndex = -1;
-		DirectX::SimpleMath::Vector3 m_lightColor;
+		DirectX::SimpleMath::Vector3 m_lightColor = { 255.0f, 255.0f, 255.0f };
 		float m_lightIntensity = 1.0f;
 
 	public:
