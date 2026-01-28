@@ -60,6 +60,9 @@ namespace MMMEngine {
 
 	void RenderManager::ApplyLightToMat(ID3D11DeviceContext4* _context, Light* _light, Material* _mat)
 	{
+		if (_mat->GetFilePath().empty())
+			return;
+
 		if (_light->m_lightIndex < 0)
 			return;
 
