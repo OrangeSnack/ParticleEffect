@@ -13,7 +13,7 @@ RTTR_REGISTRATION
 	using namespace MMMEngine;
 
 	registration::class_<RigidBodyComponent>("RigidBodyComponent")
-		(rttr::metadata("wrapper_type", rttr::type::get<ObjPtr<RigidBodyComponent>>()))
+		(rttr::metadata("wrapper_type_name", "ObjPtr<RigidBodyComponent>"))
 		.property("Type", &RigidBodyComponent::GetType , &RigidBodyComponent::SetType)
 		.property("Mass", &RigidBodyComponent::GetMass , &RigidBodyComponent::SetMass)
 		.property("LinearDamping", &RigidBodyComponent::GetLineDamping , &RigidBodyComponent::SetLineDamping)
@@ -26,7 +26,8 @@ RTTR_REGISTRATION
 		.constructor(
 			[]() {
 				return Object::NewObject<RigidBodyComponent>();
-			});
+			})
+		.method("Inject", &ObjPtr<RigidBodyComponent>::Inject);
 	registration::enumeration<RigidBodyComponent::Type>("RigidType")
 		(
 			rttr::value("Dynamic", RigidBodyComponent::Type::Dynamic),
@@ -39,9 +40,6 @@ RTTR_REGISTRATION
 		.property("AngularDamping", &RigidBodyComponent::Desc::angularDamping)
 		.property("UseGravity", &RigidBodyComponent::Desc::useGravity)
 		.property("IsKinematic", &RigidBodyComponent::Desc::isKinematic);
-
-
-	type::register_wrapper_converter_for_base_classes<MMMEngine::ObjPtr<RigidBodyComponent>>();
 }
 
 void MMMEngine::RigidBodyComponent::CreateActor(physx::PxPhysics* physics, Vector3 worldPos, Quaternion Quater)
@@ -182,8 +180,8 @@ void MMMEngine::RigidBodyComponent::PushToPhysics()
 {
 	if (!m_Actor) return;
 	if (!GetGameObject().IsValid()) return;
-	PushPoseIfDirty();
 	PushStateChanges();
+	PushPoseIfDirty();
 	PushForces();
 	PushWakeUp();
 }
@@ -203,12 +201,12 @@ void MMMEngine::RigidBodyComponent::PullFromPhysics()
 	//키네마틱은 코드 포지션 기준이라 Pull로 덮어쓰지 않음
 	//동기화 옵션을 두고 켤 수있도록 가능
 	//지금은 키네마틱이면 덮어쓰지 않도록 
-	if (m_Desc.isKinematic)
-	{
-		// const physx::PxTransform pxPose = t_dynamic->getGlobalPose(); 동기화 옵션용
-		// ApplyPoseToEngine(pxPose);
-		return;
-	}
+	//if (m_Desc.isKinematic)
+	//{
+	//	// const physx::PxTransform pxPose = t_dynamic->getGlobalPose(); 동기화 옵션용
+	//	// ApplyPoseToEngine(pxPose);
+	//	return;
+	//}
 
 	// PhysX -> Engine Transform
 	const physx::PxTransform pxPose = t_dynamic->getGlobalPose();
@@ -277,6 +275,26 @@ void MMMEngine::RigidBodyComponent::PushForces()
 	t_dynamic->wakeUp();
 }
 
+void MMMEngine::RigidBodyComponent::SnapRotation(const Quaternion& q)
+{
+	if (!m_Actor) return;
+	if (m_Desc.type == Type::Static) return;
+
+	physx::PxTransform pose = m_Actor->getGlobalPose();
+	pose.q = ToPxQuat(q);
+	m_Actor->setGlobalPose(pose);
+
+	if (auto* d = m_Actor->is<physx::PxRigidDynamic>())
+	{
+		if (!m_Desc.isKinematic)
+		{
+			d->setAngularVelocity(physx::PxVec3(0));
+			// 선형 속도는 유지: d->getLinearVelocity() 그대로 둠
+		}
+	}
+	m_WakeRequested = true;
+}
+
 
 
 void MMMEngine::RigidBodyComponent::Teleport(const Vector3& worldPos, const Quaternion& Quater)
@@ -290,16 +308,18 @@ void MMMEngine::RigidBodyComponent::Teleport(const Vector3& worldPos, const Quat
 void MMMEngine::RigidBodyComponent::SetKinematicTarget(const Vector3& worldPos, const Quaternion& Quater)
 {
 	// 키네마틱 호출용 방어코드 다이나믹일경우 아웃
-	if (m_Desc.type != Type::Dynamic) return;
+	//if (m_Desc.type != Type::Dynamic) return;
+	if (!m_Desc.isKinematic) return;
 
 	// 키네마틱 설정이 되었고 키네마틱좌표를 저장
 	m_KinematicTarget.position = worldPos;
 	m_KinematicTarget.rotation = Quater;
 
 	m_HasKinematicTarget = true;
-	m_WakeRequested = true;
 
-	// 만약 호출 시점에 키네마틱 전환까지 같이 보장하고 싶으면 (까먹엇을수도 있으니깐)
+
+	//m_WakeRequested = true;
+	// 만약 호출 시점에 키네마틱 전환까지 같이 보장한다면
 	// m_Desc.isKinematic = true; 
 	// m_DescDirty = true;
 }
@@ -475,6 +495,57 @@ void MMMEngine::RigidBodyComponent::OffPendingType()
 	m_TypeChangePending = false;
 }
 
+Vector3 MMMEngine::RigidBodyComponent::Px_GetWorldPosition() const
+{
+	Vector3 temp_Posion{};
+
+	if (m_Actor)
+	{
+		physx::PxTransform px = m_Actor->getGlobalPose();
+		
+		temp_Posion = ToVec(px.p);
+	}
+	return temp_Posion;
+}
+
+Quaternion MMMEngine::RigidBodyComponent::Px_GetWorldRotation() const
+{
+	Quaternion temp_Quat{};
+
+	if (m_Actor)
+	{
+		physx::PxTransform px = m_Actor->getGlobalPose();
+
+		temp_Quat = ToQuat(px.q);
+	}
+	return Quaternion();
+}
+
+Vector3 MMMEngine::RigidBodyComponent::Px_GetForward() const
+{
+	Vector3 forward(0.f, 0.f, 1.f); // 엔진 정면 기준 (-Z)
+
+	if (m_Actor)
+	{
+		physx::PxTransform px = m_Actor->getGlobalPose();
+		physx::PxVec3 f = px.q.rotate(physx::PxVec3(0, 0, 1));
+		forward = Vector3(f.x, f.y, f.z);
+	}
+
+	//// 캐릭터용: y 제거
+	//forward.y = 0.f;
+	//if (forward.LengthSquared() > 0.f)
+	//	forward.Normalize();
+
+	return forward;
+}
+
+float MMMEngine::RigidBodyComponent::Px_GetYaw() const
+{
+	Vector3 fwd = Px_GetForward();
+	return std::atan2(fwd.x, fwd.z);
+}
+
 
 
 void MMMEngine::RigidBodyComponent::BindTeleport()
@@ -500,7 +571,7 @@ physx::PxForceMode::Enum MMMEngine::RigidBodyComponent::ToPxForceMode(ForceMode 
 void MMMEngine::RigidBodyComponent::SetUseGravity(bool value)
 {
 	auto it  = MMMEngine::PhysxManager::Get().getPScene();
-
+	
 
 	if (&(it->GetScene()) == nullptr)
 	{
@@ -510,6 +581,7 @@ void MMMEngine::RigidBodyComponent::SetUseGravity(bool value)
 		physx::PxActorTypeFlag::eRIGID_DYNAMIC);
 
 	std::cout << count << std::endl;*/
+
 	m_Desc.useGravity = value; m_DescDirty = true; m_WakeRequested = true;
 }
 

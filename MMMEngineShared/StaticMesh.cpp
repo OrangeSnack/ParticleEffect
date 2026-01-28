@@ -29,7 +29,6 @@ RTTR_REGISTRATION
 				ok = true;
 				return nullptr;
 			}
-
 			auto result = std::dynamic_pointer_cast<StaticMesh>(from);
 			ok = (result != nullptr);
 			return result;

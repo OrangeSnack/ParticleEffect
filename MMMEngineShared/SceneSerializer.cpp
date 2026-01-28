@@ -5,9 +5,11 @@
 #include "rttr/type"
 #include "Transform.h"
 #include "ResourceManager.h"
+#include "MissingScriptBehaviour.h"
 
 #include <fstream>
 #include <filesystem>
+
 
 DEFINE_SINGLETON(MMMEngine::SceneSerializer)
 
@@ -17,6 +19,22 @@ using namespace MMMEngine;
 using namespace rttr;
 
 std::unordered_map<std::string, rttr::variant> g_objectTable;
+
+static bool TryDecodeMsgPackToJson(const std::vector<uint8_t>& data, nlohmann::json& out)
+{
+    if (data.empty())
+        return false;
+
+    try
+    {
+        out = nlohmann::json::from_msgpack(data);
+        return true;
+    }
+    catch (...)
+    {
+        return false;
+    }
+}
 
 json SerializeVariant(const rttr::variant& var);
 json SerializeObject(const rttr::instance& obj)
@@ -142,6 +160,33 @@ json SerializeComponent(const ObjPtr<Component>& comp)
     type type = type::get(*comp);
     compJson["Type"] = type.get_name().to_string();
 
+    ObjPtr<MissingScriptBehaviour> missing;
+    {
+        try { missing = comp.Cast<MissingScriptBehaviour>(); }
+        catch (...) { /* ignore */ }
+    }
+
+    if (missing.IsValid())
+    {
+        const std::string& originalType = missing->GetOriginalTypeName();
+        compJson["Type"] = originalType.empty() ? std::string("MissingScriptBehaviour") : originalType;
+
+        // props를 그대로 저장 (msgpack 보관본이 있으면 그걸 사용)
+        if (missing->HasOriginalProps())
+        {
+            json props = json::from_msgpack(missing->GetOriginalPropsMsgPack());
+            compJson["Props"] = props;
+        }
+        else
+        {
+            // 보관본이 없으면, 최소한 MUID라도 저장되게 fallback
+            compJson["Props"] = json::object();
+            compJson["Props"]["MUID"] = comp->GetMUID().ToString(); // GetMUID가 Component에 있다고 가정
+        }
+
+        return compJson;
+    }
+
     for (auto& prop : type.get_properties(
         rttr::filter_item::instance_item |
         rttr::filter_item::public_access |
@@ -209,6 +254,15 @@ void MMMEngine::SceneSerializer::Serialize(const Scene& scene, std::wstring path
     file.close();
 }
 
+static bool IsMissingScriptTargetVariant(const rttr::variant& v)
+{
+    MMMEngine::Object* o = nullptr;
+    if (!v.convert(o) || !o)
+        return false;
+
+    rttr::type ot = rttr::type::get(*o);
+    return ot.is_derived_from(rttr::type::get<MMMEngine::MissingScriptBehaviour>());
+}
 
 void DeserializeVariant(rttr::variant& target, const json& j, type target_type);
 
@@ -287,16 +341,18 @@ void DeserializeVariant(rttr::variant& target, const json& j, type target_type)
 
     if (target_type.is_sequential_container())
     {
+        if (!target.is_valid() || target.get_type() != target_type)
+            target = target_type.create();
+
         auto view = target.create_sequential_view();
         view.clear();
 
-        // 템플릿 인자 가져오기
         auto args = target_type.get_wrapped_type().get_template_arguments();
         auto it = args.begin();
         if (it == args.end())
             return;
 
-        type value_type = *it;
+        rttr::type value_type = *it;
 
         for (const auto& item : j)
         {
@@ -309,21 +365,23 @@ void DeserializeVariant(rttr::variant& target, const json& j, type target_type)
 
     if (target_type.is_associative_container())
     {
+        if (!target.is_valid() || target.get_type() != target_type)
+            target = target_type.create();
+
         auto view = target.create_associative_view();
         view.clear();
 
-        // 템플릿 인자 가져오기 (key, value)
         auto args = target_type.get_wrapped_type().get_template_arguments();
         auto it = args.begin();
         if (it == args.end())
             return;
 
-        type key_type = *it;
+        rttr::type key_type = *it;
         ++it;
         if (it == args.end())
             return;
 
-        type value_type = *it;
+        rttr::type value_type = *it;
 
         for (auto& [key, value] : j.items())
         {
@@ -360,11 +418,6 @@ void DeserializeVariant(rttr::variant& target, const json& j, type target_type)
                 {
                     target = loadedResource;               // v는 이제 shared_ptr<StaticMesh> 타입 variant
                 }
-
-          
-
-
-
                 return;
             }
         }
@@ -373,17 +426,54 @@ void DeserializeVariant(rttr::variant& target, const json& j, type target_type)
     // ObjPtr<T> 타입 처리
     if (target_type.get_name().to_string().find("ObjPtr") != std::string::npos)
     {
-        std::string muidStr = j.get<std::string>();
-
-        auto it = g_objectTable.find(muidStr);
-        if (it != g_objectTable.end())
+        auto inject = target_type.get_method("Inject");
+        if (!inject.is_valid())
         {
-            // 변환 시도하지 말고 그대로 대입
-            target = it->second;
+            // Inject가 등록 안 된 ObjPtr면 복원 불가
+            target = rttr::variant();
+            return;
         }
+
+        // 1) null이면: "null handle" 규약으로 Inject
+        if (j.is_null())
+        {
+            ObjPtr<Object> nullObj;               // default: raw=null, ptrID=UINT32_MAX 규약이라면 OK
+            const ObjPtrBase& nullRef = nullObj;
+
+            rttr::variant okv = inject.invoke(target, nullRef);
+            return;
+        }
+
+        // 2) MUID로 테이블 lookup
+        std::string muidStr = j.get<std::string>();
+        auto it = g_objectTable.find(muidStr);
+        if (it == g_objectTable.end() || IsMissingScriptTargetVariant(it->second))
+        {
+            ObjPtr<Object> nullObj;
+            const ObjPtrBase& nullRef = nullObj;
+            inject.invoke(target, nullRef);
+            return;
+        }
+
+        // 3) table에는 ObjPtr<Object>만 저장해놨으니 그대로 꺼내서 Inject
+        rttr::variant src = it->second;
+
+        // 안전하게: ObjPtr<Object>로 꺼내고(복사), 그 복사의 baseRef를 Inject에 넘김
+        if (src.is_type<ObjPtr<Object>>())
+        {
+            ObjPtr<Object> base = src.get_value<ObjPtr<Object>>();
+            const ObjPtrBase& baseRef = base;
+
+            rttr::variant okv = inject.invoke(target, baseRef);
+            return;
+        }
+
+        // fallback: 타입이 예상과 다르면 null 처리
+        ObjPtr<Object> nullObj;
+        const ObjPtrBase& nullRef = nullObj;
+        inject.invoke(target, nullRef);
         return;
     }
-
     // 사용자 정의 객체
     if (!target.is_valid() || target.get_type() != target_type)
     {
@@ -396,7 +486,36 @@ void DeserializeVariant(rttr::variant& target, const json& j, type target_type)
 void DeserializeComponent(const json& compJson, ObjPtr<GameObject> obj)
 {
     std::string typeName = compJson["Type"].get<std::string>();
+
     type compType = type::get_by_name(typeName);
+
+    if (!compType.is_valid())
+    {
+        const json& props = compJson["Props"];
+        compType = rttr::type::get<MissingScriptBehaviour>();
+
+        // 이게 터진거면 Missing 스크립트 소스가 잘못된 것
+        auto compVar = obj->AddComponent(compType); // ObjPtr<Component> variant 반환한다고 가정
+        if (!compVar.IsValid())
+            return;
+
+        if (props.contains("MUID"))
+        {
+            std::string muid = props["MUID"].get<std::string>();
+            g_objectTable[muid] = ObjPtr<Object>(compVar);
+        }
+
+        ObjPtr<MissingScriptBehaviour> missing = compVar.Cast<MissingScriptBehaviour>();
+        if (missing.IsValid())
+        {
+            missing->SetOriginalTypeName(typeName);
+            std::vector<uint8_t> packed = json::to_msgpack(props);
+            missing->SetOriginalPropsMsgPack(std::move(packed));
+        }
+
+        // ❗ Missing엔 실제 프로퍼티가 없으니 DeserializeObject 돌리지 않음(데이터 손실 방지)
+        return;
+    }
 
     auto comp = obj->AddComponent(compType);
     // Component의 MUID를 먼저 테이블에 등록
@@ -404,7 +523,7 @@ void DeserializeComponent(const json& compJson, ObjPtr<GameObject> obj)
     if (props.contains("MUID"))
     {
         std::string muid = props["MUID"].get<std::string>();
-        g_objectTable[muid] = comp;
+        g_objectTable[muid] = ObjPtr<Object>(comp);
     }
 
     // 속성 복원 (ObjPtr도 바로 처리됨)
@@ -484,7 +603,7 @@ void MMMEngine::SceneSerializer::Deserialize(Scene& scene, const SnapShot& snaps
         if (auto parsedGo = Utility::MUID::Parse(goMUID); parsedGo.has_value())
             go->SetMUID(parsedGo.value());
 
-        g_objectTable[goMUID] = go;
+        g_objectTable[goMUID] = ObjPtr<Object>(go);
 
         // todo : 여기서 RectTransform도 같이 찾기 -> 분기 생성
         // Transform json 찾기
@@ -503,7 +622,7 @@ void MMMEngine::SceneSerializer::Deserialize(Scene& scene, const SnapShot& snaps
         if (auto parsedTr = Utility::MUID::Parse(trMUID); parsedTr.has_value())
             tr->SetMUID(parsedTr.value());
 
-        g_objectTable[trMUID] = tr;
+        g_objectTable[trMUID] = ObjPtr<Object>(tr);
 
         // Transform 값 복원 (Parent/MUID는 스킵)
         DeserializeTransform(*tr, trProps);
@@ -595,9 +714,9 @@ void MMMEngine::SceneSerializer::SerializeToMemory(const Scene& scene, SnapShot&
         json compJson;
         json compArray = json::array();
         compJson["Type"] = "Transform";
-        compJson["Props"]["Position"] = json::array({ 0, 0, 0 });
-        compJson["Props"]["Rotation"] = json::array({ 0, 0, 0, 1 });
-        compJson["Props"]["Scale"] = json::array({ 1.0f, 1.0f, 1.0f });
+        compJson["Props"]["Position"]["z"] = 5.0f;
+        compJson["Props"]["Rotation"]["y"] = -1.0f;
+        compJson["Props"]["Rotation"]["w"] = 0.0f;
         compJson["Props"]["MUID"] = Utility::MUID::NewMUID().ToString();
         compJson["Props"]["Parent"] = nullptr;
 

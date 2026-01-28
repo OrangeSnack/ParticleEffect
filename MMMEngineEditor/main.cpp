@@ -1,4 +1,4 @@
-#define NOMINMAX
+﻿#define NOMINMAX
 #include <iostream>
 #include <filesystem>
 
@@ -22,6 +22,7 @@
 #include "DLLHotLoadHelper.h"
 #include "PhysX.h"
 #include "ShaderInfo.h"
+#include "PhysicsSettings.h"
 
 namespace fs = std::filesystem;
 using namespace MMMEngine;
@@ -36,15 +37,24 @@ void AfterProjectLoaded()
 	GlobalRegistry::g_pApp->SetWindowTitle(L"MMMEditor [ " + Utility::StringHelper::StringToWString(currentProject.rootPath) + L" ]");
 	ObjectManager::Get().StartUp();
 
+
+	PhysicsSettings::Get().StartUp(currentProject.ProjectRootFS() / "ProjectSettings");
+
 	// 유저 스크립트 불러오기
-	fs::path cwd = fs::current_path();
-	DLLHotLoadHelper::CleanupHotReloadCopies(cwd);
+	fs::path hotDir;
+	if (const char* lad = std::getenv("LOCALAPPDATA"))
+		hotDir = fs::path(lad) / "MMMEngine" / "HotReload";
+	else
+		hotDir = fs::temp_directory_path() / "MMMEngine" / "HotReload";
+
+	DLLHotLoadHelper::CleanupHotReloadCopies(hotDir);
 
 	fs::path projectPath = ProjectManager::Get().GetActiveProject().rootPath;
+	fs::path originDll = projectPath / "Binaries" / "Win64" / "UserScripts.dll";
 
-	fs::path dllPath = DLLHotLoadHelper::CopyDllForHotReload(projectPath / "Binaries" / "Win64" / "UserScripts.dll", cwd);
+	fs::path dllPath = DLLHotLoadHelper::CopyDllForHotReload(originDll, hotDir);
 
-	BehaviourManager::Get().StartUp(dllPath.stem().u8string());
+	BehaviourManager::Get().StartUp(dllPath.u8string());
 
 	// 리소스 매니저 부팅
 	ResourceManager::Get().StartUp(projectPath.generic_wstring() + L"/");
@@ -143,40 +153,54 @@ void Update()
 		{
 			if (!EditorRegistry::g_editor_scene_playing
 				|| EditorRegistry::g_editor_scene_pause)
+			{
+				PhysxManager::Get().SetStep();
 				return;
+			}
 
 			BehaviourManager::Get().BroadCastBehaviourMessage("FixedUpdate");
 			PhysxManager::Get().StepFixed(fixedDt);
 
-			std::vector<std::tuple<ObjPtr<GameObject>, ObjPtr<GameObject>, P_EvenType>> vec;
+			std::vector<std::variant<CollisionInfo, TriggerInfo>> vec;
 
 			std::swap(vec, PhysxManager::Get().GetCallbackQue());
 
-			for (auto& [A, B, Event] : vec)
+			for (auto& ev : vec)
 			{
-				switch (Event)
-				{
-				case P_EvenType::C_enter:
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(A, "OnCollisionEnter", B);
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(B, "OnCollisionEnter", A);
-					break;
-				case P_EvenType::C_stay:
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(A, "OnCollisionStay", B);
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(B, "OnCollisionStay", A);
-					break;
-				case P_EvenType::C_out:
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(A, "OnCollisionExit", B);
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(B, "OnCollisionExit", A);
-					break;
-				case P_EvenType::T_enter:
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(A, "OnTriggerEnter", B);
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(B, "OnTriggerEnter", A);
-					break;															
-				case P_EvenType::T_out:											
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(A, "OnTriggerEnter", B);
-					BehaviourManager::Get().SpecificBroadCastBehaviourMessage(B, "OnTriggerEnter", A);
-					break;
-				}
+				//기존은 enum으로 switch 분기, variant를 쓰면서 실제타입분리를 위해 visit를 사용
+				//variant 안에 들어 있는 실제 타입에 따라 함수를 호출
+				std::visit([&](auto& e)
+					{
+						using T = std::decay_t<decltype(e)>;
+
+						if constexpr (std::is_same_v<T, CollisionInfo>)
+						{
+							switch (e.phase)
+							{
+							case CollisionPhase::Enter:
+								BehaviourManager::Get().SpecificBroadCastBehaviourMessage(e.self, "OnCollisionEnter", e);
+								break;
+							case CollisionPhase::Stay:
+								BehaviourManager::Get().SpecificBroadCastBehaviourMessage(e.self, "OnCollisionStay", e);
+								break;
+							case CollisionPhase::Exit:
+								BehaviourManager::Get().SpecificBroadCastBehaviourMessage(e.self, "OnCollisionExit", e);
+								break;
+							}
+						}
+						else if constexpr (std::is_same_v<T, TriggerInfo>)
+						{
+							switch (e.phase)
+							{
+							case TriggerPhase::Enter:
+								BehaviourManager::Get().SpecificBroadCastBehaviourMessage(e.self, "OnTriggerEnter", e);
+								break;
+							case TriggerPhase::Exit:
+								BehaviourManager::Get().SpecificBroadCastBehaviourMessage(e.self, "OnTriggerExit", e);
+								break;
+							}
+						}
+					}, ev);
 			}
 		});
 

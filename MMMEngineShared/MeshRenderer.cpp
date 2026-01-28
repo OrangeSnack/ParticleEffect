@@ -16,16 +16,15 @@ RTTR_REGISTRATION
 	using namespace MMMEngine;
 
 	registration::class_<MeshRenderer>("MeshRenderer")
-		(rttr::metadata("wrapper_type", rttr::type::get<ObjPtr<MeshRenderer>>()))
+		(rttr::metadata("wrapper_type_name", "ObjPtr<MeshRenderer>"))
 		.property("Mesh", &MeshRenderer::GetMesh, &MeshRenderer::SetMesh);
 
 	registration::class_<ObjPtr<MeshRenderer>>("ObjPtr<MeshRenderer>")
 		.constructor<>(
 			[]() {
 				return Object::NewObject<MeshRenderer>();
-			});
-
-	type::register_wrapper_converter_for_base_classes<MMMEngine::ObjPtr<MeshRenderer>>();
+			})
+		.method("Inject", &ObjPtr<MeshRenderer>::Inject);
 }
 
 void MMMEngine::MeshRenderer::SetMesh(ResPtr<StaticMesh>& _mesh)

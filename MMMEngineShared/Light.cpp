@@ -19,7 +19,7 @@ RTTR_REGISTRATION{
 			);
 
 	registration::class_<Light>("Light")
-		(metadata("wrapper_type", rttr::type::get<ObjPtr<Light>>()))
+		(metadata("wrapper_type_name", "ObjPtr<Light>"))
 		.property("Type", &Light::GetLightType, &Light::SetLightType)
 		.property("Color", &Light::GetLightColor, &Light::SetLightColor)
 		.property("Intensity", &Light::GetLightIntensity, &Light::SetLightIntensity);
@@ -29,8 +29,6 @@ RTTR_REGISTRATION{
 			[]() {
 				return Object::NewObject<Light>();
 			});
-
-	type::register_wrapper_converter_for_base_classes<MMMEngine::ObjPtr<Light>>();
 }
 
 void MMMEngine::Light::SetLightIntensity(const float& _intensity)
