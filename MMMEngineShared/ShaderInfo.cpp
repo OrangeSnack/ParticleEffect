@@ -443,7 +443,7 @@ void MMMEngine::ShaderInfo::SetGlobalPropVal(const ShaderType _type, const std::
 	if (nit == tit->second.end())
 		return;
 	
-	if (std::is_same_v<decltype(_value), decltype(nit->second)>) {
+	if (nit->second.index() == _value.index()) {
 		nit->second = _value;
 	}
 }

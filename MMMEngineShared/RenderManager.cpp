@@ -723,7 +723,7 @@ namespace MMMEngine {
 		m_pSwapChain->Present(m_rSyncInterval, 0);
 	}
 
-	int RenderManager::AddRenderer(Renderer* _renderer)
+	uint32_t RenderManager::AddRenderer(Renderer* _renderer)
 	{
 		static uint32_t index = 0;
 
