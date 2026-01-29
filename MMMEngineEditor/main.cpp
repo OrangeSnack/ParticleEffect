@@ -210,12 +210,6 @@ void Update()
 		BehaviourManager::Get().BroadCastBehaviourMessage("LateUpdate");
 	}
 
-	if (EditorRegistry::g_editor_scene_playing
-		&& !EditorRegistry::g_editor_scene_pause)
-	{
-		PhysxManager::Get().ApplyInterpolation(TimeManager::Get().GetInterpolationAlpha());
-	}
-
 	RenderManager::Get().BeginFrame();
 	RenderManager::Get().Render();
 	ImGuiEditorContext::Get().BeginFrame();

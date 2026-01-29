@@ -2,7 +2,6 @@
 #include "SceneManager.h"
 #include "Transform.h"
 #include "Resource.h"
-#include "RigidBodyComponent.h"
 #include <regex>
 
 #include "EditorRegistry.h"
@@ -35,28 +34,6 @@ static rttr::variant MakeDefaultElement(rttr::type elemType)
 
     // 그 외는 RTTR create()
     return elemType.create(); // 실패하면 invalid 가능
-}
-
-static void ApplyRigidBodyFromTransformIfPlaying(const ObjPtr<GameObject>& go)
-{
-    if (!g_editor_scene_playing)
-        return;
-
-    if (!go.IsValid())
-        return;
-
-    auto rbPtr = go->GetComponent<RigidBodyComponent>();
-    if (!rbPtr.IsValid())
-        return;
-
-    auto tr = go->GetTransform();
-    if (!tr.IsValid())
-        return;
-
-    if (rbPtr->GetKinematic())
-        rbPtr->SetKinematicTarget(tr->GetWorldPosition(), tr->GetWorldRotation());
-    else
-        rbPtr->Editor_changeTrans(tr->GetWorldPosition(), tr->GetWorldRotation());
 }
 
 static bool DrawElementPOD(const char* label, rttr::variant& elem, rttr::type elemType, bool readOnly)
@@ -278,11 +255,7 @@ void MMMEngine::Editor::InspectorWindow::RenderProperties(rttr::instance inst)
             if (readOnly) ImGui::EndDisabled();
 
             if (changed && !readOnly)
-            {
                 prop.set_value(inst, Vector3(data[0], data[1], data[2]));
-                if (t == rttr::type::get<Transform>() && name == "Position")
-                    ApplyRigidBodyFromTransformIfPlaying(g_selectedGameObject);
-            }
         }
         else if (propType.is_enumeration())
         {
@@ -732,8 +705,6 @@ void MMMEngine::Editor::InspectorWindow::RenderProperties(rttr::instance inst)
 
                 updatedQ.Normalize();
                 prop.set_value(inst, updatedQ);
-                if (t == rttr::type::get<Transform>() && name == "Rotation")
-                    ApplyRigidBodyFromTransformIfPlaying(g_selectedGameObject);
             }
         }
     }
