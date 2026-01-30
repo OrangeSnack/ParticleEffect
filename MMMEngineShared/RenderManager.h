@@ -10,6 +10,7 @@
 #include <memory>
 #include <type_traits>
 #include <typeindex>
+#include <unordered_map>
 
 #include <dxgi1_4.h>
 #include <wrl/client.h>
@@ -43,8 +44,10 @@ namespace MMMEngine
 		std::map<RenderType, std::vector<RenderCommand>> m_renderCommands;
 		std::unordered_map<int, DirectX::SimpleMath::Matrix> m_objWorldMatMap;
 		std::vector<Renderer*> m_renderers;
+		std::unordered_map<uint32_t, Renderer*> m_rendererIdMap;
 		std::queue<Renderer*> m_renInitQueue;
 		unsigned int m_rObjIdx = 0;
+		uint32_t m_nextRendererId = 1;
 		
 		// 라이트 저장
 		std::vector<Light*> m_lights;

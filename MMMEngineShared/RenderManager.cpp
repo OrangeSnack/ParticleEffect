@@ -858,14 +858,14 @@ namespace MMMEngine {
 
 	uint32_t RenderManager::AddRenderer(Renderer* _renderer)
 	{
-		static uint32_t index = 0;
-
 		if (_renderer == nullptr)
 			return UINT32_MAX;
-		
+
+		uint32_t id = m_nextRendererId++;
 		m_renderers.push_back(_renderer);
+		m_rendererIdMap[id] = _renderer;
 		m_renInitQueue.push(_renderer);
-		return index++;
+		return id;
 	}
 
 	void RenderManager::RemoveRenderer(int _idx)
@@ -873,17 +873,21 @@ namespace MMMEngine {
 		if (m_renderers.empty())
 			return;
 
-		if (_idx < m_renderers.size() && _idx >= 0)
-		{
-			if (m_renderers.size() == 1)
-			{
-				m_renderers.pop_back();
-				return;
-			}
+		auto it = m_rendererIdMap.find(static_cast<uint32_t>(_idx));
+		if (it == m_rendererIdMap.end())
+			return;
 
-			std::swap(m_renderers[_idx], m_renderers.back());
-			m_renderers[_idx]->renderIndex = _idx;
-			m_renderers.pop_back();
+		Renderer* target = it->second;
+		m_rendererIdMap.erase(it);
+
+		for (size_t i = 0; i < m_renderers.size(); ++i)
+		{
+			if (m_renderers[i] == target)
+			{
+				m_renderers[i] = m_renderers.back();
+				m_renderers.pop_back();
+				break;
+			}
 		}
 	}
 
@@ -919,9 +923,9 @@ namespace MMMEngine {
 
 	Renderer* RenderManager::GetRendererById(uint32_t id) const
 	{
-		if (id >= m_renderers.size())
+		auto it = m_rendererIdMap.find(id);
+		if (it == m_rendererIdMap.end())
 			return nullptr;
-
-		return m_renderers[id];
+		return it->second;
 	}
 }
