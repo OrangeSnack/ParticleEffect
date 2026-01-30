@@ -1,4 +1,4 @@
-﻿#include "RenderManager.h"
+#include "RenderManager.h"
 
 #include "RendererTools.h"
 #include "RenderShared.h"
@@ -11,6 +11,7 @@
 #include "Material.h"
 
 #include "rttr/registration.h"
+#include <cmath>
 
 DEFINE_SINGLETON(MMMEngine::RenderManager)
 
@@ -552,18 +553,18 @@ namespace MMMEngine {
 		
 
 		// 뷰포트 갱신
-		m_sceneViewport.Width = _sceneWidth;
-		m_sceneViewport.Height = _sceneHeight;
+		m_sceneViewport.Width = static_cast<float>(_sceneWidth);
+		m_sceneViewport.Height = static_cast<float>(_sceneHeight);
 		m_sceneViewport.MinDepth = 0.0f;
 		m_sceneViewport.MaxDepth = 1.0f;
-		m_sceneViewport.TopLeftX = 0;
-		m_sceneViewport.TopLeftY = 1;
+		m_sceneViewport.TopLeftX = 0.0f;
+		m_sceneViewport.TopLeftY = 0.0f;
 
 		// todo : 렌더러 작업자에게 꼭 고지하기
 		// 카메라 Aspect Ratio 변경
 		if (m_pMainCamera.IsValid())
 		{
-			m_pMainCamera->SetAspect(_sceneWidth / _sceneHeight);
+			m_pMainCamera->SetAspect(static_cast<float>(_sceneWidth) / static_cast<float>(_sceneHeight));
 		}
 	}
 
@@ -669,30 +670,35 @@ namespace MMMEngine {
 			m_pDeviceContext->PSSetSamplers(0, 1, m_pDafaultSampler.GetAddressOf());
 
 			// 씬 뷰포트 설정
-			float sceneAspect = (float)m_sceneWidth / (float)m_sceneHeight;
-			float swapchainAspect = (float)m_clientWidth / (float)m_clientHeight;
+			float sceneAspect = static_cast<float>(m_sceneWidth) / static_cast<float>(m_sceneHeight);
+			float swapchainAspect = static_cast<float>(m_clientWidth) / static_cast<float>(m_clientHeight);
 
-			float drawW, drawH;
+			float drawWf, drawHf;
 
 			if (swapchainAspect > sceneAspect) {
-				drawH = (float)m_clientHeight;
-				drawW = (float)m_clientHeight * sceneAspect;
+				drawHf = static_cast<float>(m_clientHeight);
+				drawWf = static_cast<float>(m_clientHeight) * sceneAspect;
 			}
 			else {
-				drawW = (float)m_clientWidth;
-				drawH = (float)m_clientWidth / sceneAspect;
+				drawWf = static_cast<float>(m_clientWidth);
+				drawHf = static_cast<float>(m_clientWidth) / sceneAspect;
 			}
 
-			float offsetX = ((float)m_clientWidth - drawW) * 0.5f;
-			float offsetY = ((float)m_clientHeight - drawH) * 0.5f;
+			// 정수 픽셀 기준으로 스냅
+			int drawW = static_cast<int>(std::round(drawWf));
+			int drawH = static_cast<int>(std::round(drawHf));
+			int offsetX = (static_cast<int>(m_clientWidth) - drawW) / 2;
+			int offsetY = (static_cast<int>(m_clientHeight) - drawH) / 2;
 
-
-			m_swapViewport.TopLeftX = offsetX;
-			m_swapViewport.TopLeftY = offsetY;
-			m_swapViewport.Width = drawW;
-			m_swapViewport.Height = drawH;
+			m_swapViewport.TopLeftX = static_cast<float>(offsetX);
+			m_swapViewport.TopLeftY = static_cast<float>(offsetY);
+			m_swapViewport.Width = static_cast<float>(drawW);
+			m_swapViewport.Height = static_cast<float>(drawH);
 			m_swapViewport.MinDepth = 0.0f;
 			m_swapViewport.MaxDepth = 1.0f;
+
+			// 변경된 뷰포트를 실제 파이프라인에 반영
+			m_pDeviceContext->RSSetViewports(1, &m_swapViewport);
 
 			m_pDeviceContext->Draw(3, 0);
 		}
