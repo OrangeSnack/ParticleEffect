@@ -1,4 +1,4 @@
-#include "RenderManager.h"
+﻿#include "RenderManager.h"
 
 #include "RendererTools.h"
 #include "RenderShared.h"
@@ -731,6 +731,122 @@ namespace MMMEngine {
 		ExcuteCommands();
 	}
 
+	void RenderManager::RenderPickingIds(ID3D11VertexShader* vs, ID3D11PixelShader* ps, ID3D11InputLayout* layout, ID3D11Buffer* idBuffer)
+	{
+		if (!vs || !ps || !layout || !idBuffer)
+			return;
+
+		// 캠 버퍼 업데이트
+		Render_CamBuffer m_camMat = {};
+		m_camMat.camPos = XMMatrixInverse(nullptr, m_viewMatrix).r[3];
+		m_camMat.mView = XMMatrixTranspose(m_viewMatrix);
+		m_camMat.mProjection = XMMatrixTranspose(m_projMatrix);
+
+		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);
+
+		// 기본 렌더셋팅
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pDeviceContext->IASetInputLayout(layout);
+		m_pDeviceContext->VSSetShader(vs, nullptr, 0);
+		m_pDeviceContext->PSSetShader(ps, nullptr, 0);
+		m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCambuffer.GetAddressOf());
+		m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pTransbuffer.GetAddressOf());
+		m_pDeviceContext->PSSetConstantBuffers(5, 1, &idBuffer);
+		float blendFactor[4] = { 0,0,0,0 };
+		UINT sampleMask = 0xffffffff;
+		m_pDeviceContext->OMSetBlendState(m_pDefaultBS.Get(), blendFactor, sampleMask);
+		m_pDeviceContext->RSSetState(m_pDefaultRS.Get());
+		m_pDeviceContext->OMSetDepthStencilState(nullptr, 0);
+
+		struct PickingIdBuffer
+		{
+			uint32_t objectId = 0;
+			uint32_t padding[3] = { 0, 0, 0 };
+		} pickData;
+
+		for (auto& [type, commands] : m_renderCommands)
+		{
+			if (type == RenderType::R_SKYBOX)
+				continue;
+
+			for (auto& cmd : commands)
+			{
+				if (cmd.rendererID == UINT32_MAX)
+					continue;
+
+				UINT stride = sizeof(Mesh_Vertex);
+				UINT offset = 0;
+				m_pDeviceContext->IASetVertexBuffers(0, 1, &cmd.vertexBuffer, &stride, &offset);
+				m_pDeviceContext->IASetIndexBuffer(cmd.indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+				Render_TransformBuffer transformBuffer;
+				transformBuffer.mWorld = XMMatrixTranspose(m_objWorldMatMap[cmd.worldMatIndex]);
+				transformBuffer.mNormalMatrix = XMMatrixInverse(nullptr, m_objWorldMatMap[cmd.worldMatIndex]);
+				m_pDeviceContext->UpdateSubresource1(m_pTransbuffer.Get(), 0, nullptr, &transformBuffer, 0, 0, D3D11_COPY_DISCARD);
+
+				pickData.objectId = cmd.rendererID + 1;
+				m_pDeviceContext->UpdateSubresource1(idBuffer, 0, nullptr, &pickData, 0, 0, D3D11_COPY_DISCARD);
+
+				m_pDeviceContext->DrawIndexed(cmd.indiciesSize, 0, 0);
+			}
+		}
+	}
+
+	void RenderManager::RenderSelectedMask(ID3D11VertexShader* vs, ID3D11PixelShader* ps, ID3D11InputLayout* layout, const uint32_t* ids, uint32_t count)
+	{
+		if (!vs || !ps || !layout || !ids || count == 0)
+			return;
+
+		Render_CamBuffer m_camMat = {};
+		m_camMat.camPos = XMMatrixInverse(nullptr, m_viewMatrix).r[3];
+		m_camMat.mView = XMMatrixTranspose(m_viewMatrix);
+		m_camMat.mProjection = XMMatrixTranspose(m_projMatrix);
+
+		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);
+
+		m_pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		m_pDeviceContext->IASetInputLayout(layout);
+		m_pDeviceContext->VSSetShader(vs, nullptr, 0);
+		m_pDeviceContext->PSSetShader(ps, nullptr, 0);
+		m_pDeviceContext->VSSetConstantBuffers(0, 1, m_pCambuffer.GetAddressOf());
+		m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pTransbuffer.GetAddressOf());
+		// State (blend/depth/raster) is expected to be set by caller.
+
+		auto isSelected = [ids, count](uint32_t id) -> bool
+		{
+			for (uint32_t i = 0; i < count; ++i)
+			{
+				if (ids[i] == id)
+					return true;
+			}
+			return false;
+		};
+
+		for (auto& [type, commands] : m_renderCommands)
+		{
+			if (type == RenderType::R_SKYBOX)
+				continue;
+
+			for (auto& cmd : commands)
+			{
+				if (cmd.rendererID == UINT32_MAX || !isSelected(cmd.rendererID))
+					continue;
+
+				UINT stride = sizeof(Mesh_Vertex);
+				UINT offset = 0;
+				m_pDeviceContext->IASetVertexBuffers(0, 1, &cmd.vertexBuffer, &stride, &offset);
+				m_pDeviceContext->IASetIndexBuffer(cmd.indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+				Render_TransformBuffer transformBuffer;
+				transformBuffer.mWorld = XMMatrixTranspose(m_objWorldMatMap[cmd.worldMatIndex]);
+				transformBuffer.mNormalMatrix = XMMatrixInverse(nullptr, m_objWorldMatMap[cmd.worldMatIndex]);
+				m_pDeviceContext->UpdateSubresource1(m_pTransbuffer.Get(), 0, nullptr, &transformBuffer, 0, 0, D3D11_COPY_DISCARD);
+
+				m_pDeviceContext->DrawIndexed(cmd.indiciesSize, 0, 0);
+			}
+		}
+	}
+
 	void RenderManager::EndFrame()
 	{
 		// 캐싱된 데이터들 해제
@@ -799,5 +915,13 @@ namespace MMMEngine {
 			m_lights[_idx]->m_lightIndex = _idx;
 			m_lights.pop_back();
 		}
+	}
+
+	Renderer* RenderManager::GetRendererById(uint32_t id) const
+	{
+		if (id >= m_renderers.size())
+			return nullptr;
+
+		return m_renderers[id];
 	}
 }

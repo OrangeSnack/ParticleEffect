@@ -3,6 +3,10 @@
 #include "EditorRegistry.h"
 #include "RenderStateGuard.h"
 #include "RenderManager.h"
+#include "ResourceManager.h"
+#include "Renderer.h"
+#include "VShader.h"
+#include "PShader.h"
 #include "SceneManager.h"
 #include <ImGuizmo.h>
 #include "Transform.h"
@@ -11,11 +15,32 @@
 #include "Camera.h"
 #include "RigidBodyComponent.h"
 #include <memory>
+#include <algorithm>
+#include <vector>
 
 using namespace MMMEngine::Editor;
 using namespace MMMEngine;
 using namespace MMMEngine::Utility;
 using namespace MMMEngine::EditorRegistry;
+
+namespace
+{
+	struct PickingIdBuffer
+	{
+		uint32_t objectId = 0;
+		uint32_t padding[3] = { 0, 0, 0 };
+	};
+
+	struct OutlineConstants
+	{
+		DirectX::SimpleMath::Vector4 color = { 1.0f, 0.5f, 0.0f, 1.0f };
+		DirectX::SimpleMath::Vector2 texelSize = { 1.0f, 1.0f };
+		DirectX::SimpleMath::Vector2 padding0 = { 0.0f, 0.0f };
+		float thickness = 1.0f;
+		float threshold = 0.2f;
+		DirectX::SimpleMath::Vector2 padding1 = { 0.0f, 0.0f };
+	};
+}
 
 void MMMEngine::Editor::SceneViewWindow::Initialize(ID3D11Device* device, ID3D11DeviceContext* context, int initWidth, int initHeight)
 {
@@ -61,6 +86,91 @@ void MMMEngine::Editor::SceneViewWindow::Initialize(ID3D11Device* device, ID3D11
 			VertexPositionColor::InputElements, VertexPositionColor::InputElementCount,
 			shaderByteCode, byteCodeLength,
 			m_pDebugDrawIL.ReleaseAndGetAddressOf());
+	}
+
+	// Picking ID constant buffer
+	{
+		D3D11_BUFFER_DESC bd = {};
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.ByteWidth = sizeof(PickingIdBuffer);
+		m_cachedDevice->CreateBuffer(&bd, nullptr, m_pPickingIdBuffer.GetAddressOf());
+	}
+
+	// Outline constant buffer
+	{
+		D3D11_BUFFER_DESC bd = {};
+		bd.Usage = D3D11_USAGE_DEFAULT;
+		bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bd.ByteWidth = sizeof(OutlineConstants);
+		m_cachedDevice->CreateBuffer(&bd, nullptr, m_pOutlineCBuffer.GetAddressOf());
+	}
+
+	// Mask depth state (always pass, no write)
+	{
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.StencilEnable = FALSE;
+		m_cachedDevice->CreateDepthStencilState(&dsDesc, m_pMaskDepthState.GetAddressOf());
+	}
+
+	// No-color-write blend state (stencil-only pass)
+	{
+		D3D11_BLEND_DESC blendDesc = {};
+		blendDesc.RenderTarget[0].BlendEnable = FALSE;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = 0;
+		m_cachedDevice->CreateBlendState(&blendDesc, m_pNoColorWriteBS.GetAddressOf());
+	}
+
+	// Stencil write state (always pass, replace)
+	{
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.StencilEnable = TRUE;
+		dsDesc.StencilReadMask = 0xFF;
+		dsDesc.StencilWriteMask = 0xFF;
+		dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+		dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.BackFace = dsDesc.FrontFace;
+		m_cachedDevice->CreateDepthStencilState(&dsDesc, m_pStencilWriteState.GetAddressOf());
+	}
+
+	// Stencil test state (equal)
+	{
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = FALSE;
+		dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+		dsDesc.StencilEnable = TRUE;
+		dsDesc.StencilReadMask = 0xFF;
+		dsDesc.StencilWriteMask = 0xFF;
+		dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+		dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+		dsDesc.BackFace = dsDesc.FrontFace;
+		m_cachedDevice->CreateDepthStencilState(&dsDesc, m_pStencilTestState.GetAddressOf());
+	}
+
+	// Outline blend state
+	{
+		D3D11_BLEND_DESC blendDesc = {};
+		blendDesc.RenderTarget[0].BlendEnable = TRUE;
+		blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+		// Preserve destination alpha so ImGui doesn't treat the scene as transparent.
+		blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ZERO;
+		blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+		blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		m_cachedDevice->CreateBlendState(&blendDesc, m_pOutlineBlendState.GetAddressOf());
 	}
 }
 
@@ -146,11 +256,14 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 			ImVec2(1, 1)
 		);
 	}
+
+	ImVec2 imagePos = ImGui::GetItemRectMin();
+	ImVec2 imageMax = ImGui::GetItemRectMax();
+	bool gizmoDrawn = false;
 	// ImGuizmo는 별도의 DrawList에 그려짐
 	if (g_selectedGameObject.IsValid() && (int)m_guizmoOperation != 0)
 	{
-		ImVec2 imagePos = ImGui::GetItemRectMin();  // 방금 그린 Image의 좌상단 (화면 좌표)
-		ImVec2 imageMax = ImGui::GetItemRectMax();
+		gizmoDrawn = true;
 		ImVec2 imageSize = ImVec2(imageMax.x - imagePos.x, imageMax.y - imagePos.y);
 
 		ImGuizmo::SetRect(imagePos.x, imagePos.y, imageSize.x, imageSize.y);
@@ -225,6 +338,54 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 						rbPtr->SetKinematicTarget(t, r);
 					else
 						rbPtr->Editor_changeTrans(t, r);
+				}
+			}
+		}
+	}
+
+	// 씬 뷰 픽킹 (좌클릭)
+	{
+		const bool gizmoBlocking = gizmoDrawn && (ImGuizmo::IsOver() || ImGuizmo::IsUsing());
+		if (m_isHovered && ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)
+			&& !gizmoBlocking)
+		{
+			ImVec2 mousePos = ImGui::GetMousePos();
+			ImVec2 imageSize = ImVec2(imageMax.x - imagePos.x, imageMax.y - imagePos.y);
+			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+			{
+				float u = (mousePos.x - imagePos.x) / imageSize.x;
+				float v = (mousePos.y - imagePos.y) / imageSize.y;
+				int x = static_cast<int>(u * static_cast<float>(m_width));
+				int y = static_cast<int>(v * static_cast<float>(m_height));
+
+				if (x >= 0 && y >= 0 && x < m_width && y < m_height && m_pIdStagingTex)
+				{
+					m_cachedContext->CopyResource(m_pIdStagingTex.Get(), m_pIdTexture.Get());
+
+					D3D11_MAPPED_SUBRESOURCE mapped = {};
+					if (SUCCEEDED(m_cachedContext->Map(m_pIdStagingTex.Get(), 0, D3D11_MAP_READ, 0, &mapped)))
+					{
+						auto* row = reinterpret_cast<uint32_t*>(static_cast<uint8_t*>(mapped.pData) + y * mapped.RowPitch);
+						uint32_t pickedId = row[x];
+						m_cachedContext->Unmap(m_pIdStagingTex.Get(), 0);
+
+						if (pickedId == 0)
+						{
+							g_selectedGameObject = nullptr;
+						}
+						else
+						{
+							auto* renderer = RenderManager::Get().GetRendererById(pickedId - 1);
+							if (renderer && renderer->GetGameObject().IsValid() && !renderer->GetGameObject()->IsDestroyed())
+							{
+								g_selectedGameObject = renderer->GetGameObject();
+							}
+							else
+							{
+								g_selectedGameObject = nullptr;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -350,6 +511,13 @@ bool MMMEngine::Editor::SceneViewWindow::CreateRenderTargets(ID3D11Device* devic
 	m_pSceneSRV.Reset();
 	m_pSceneDSV.Reset();
 	m_pDepthStencilBuffer.Reset();
+	m_pIdTexture.Reset();
+	m_pIdRTV.Reset();
+	m_pIdSRV.Reset();
+	m_pIdStagingTex.Reset();
+	m_pMaskTexture.Reset();
+	m_pMaskRTV.Reset();
+	m_pMaskSRV.Reset();
 
 	m_width = width;
 	m_height = height;
@@ -455,6 +623,28 @@ bool MMMEngine::Editor::SceneViewWindow::CreateRenderTargets(ID3D11Device* devic
 	device->CreateRenderTargetView(m_pIdTexture.Get(), nullptr, m_pIdRTV.GetAddressOf());
 	device->CreateShaderResourceView(m_pIdTexture.Get(), nullptr, m_pIdSRV.GetAddressOf());
 
+	D3D11_TEXTURE2D_DESC stagingDesc = idDesc;
+	stagingDesc.Usage = D3D11_USAGE_STAGING;
+	stagingDesc.BindFlags = 0;
+	stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+	stagingDesc.MiscFlags = 0;
+	device->CreateTexture2D(&stagingDesc, nullptr, m_pIdStagingTex.GetAddressOf());
+
+	D3D11_TEXTURE2D_DESC maskDesc = {};
+	maskDesc.Width = width;
+	maskDesc.Height = height;
+	maskDesc.MipLevels = 1;
+	maskDesc.ArraySize = 1;
+	maskDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	maskDesc.SampleDesc.Count = 1;
+	maskDesc.SampleDesc.Quality = 0;
+	maskDesc.Usage = D3D11_USAGE_DEFAULT;
+	maskDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+
+	device->CreateTexture2D(&maskDesc, nullptr, m_pMaskTexture.GetAddressOf());
+	device->CreateRenderTargetView(m_pMaskTexture.Get(), nullptr, m_pMaskRTV.GetAddressOf());
+	device->CreateShaderResourceView(m_pMaskTexture.Get(), nullptr, m_pMaskSRV.GetAddressOf());
+
 	return true;
 }
 
@@ -474,8 +664,6 @@ void MMMEngine::Editor::SceneViewWindow::RenderSceneToTexture(ID3D11DeviceContex
 
 	ID3D11RenderTargetView* rtv = m_pSceneRTV.Get();
 	ID3D11DepthStencilView* dsv = m_pSceneDSV.Get();
-	ID3D11RenderTargetView* rtvs[2] = { m_pSceneRTV.Get(), m_pIdRTV.Get() };
-	context->OMSetRenderTargets(2, rtvs, dsv);
 
 	// Viewport
 	D3D11_VIEWPORT viewport{};
@@ -487,21 +675,56 @@ void MMMEngine::Editor::SceneViewWindow::RenderSceneToTexture(ID3D11DeviceContex
 	viewport.MaxDepth = 1.0f;
 	context->RSSetViewports(1, &viewport);
 
-	// Clear (RTV/DSV가 바인딩된 뒤에 하는 게 안전)
-	float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
-	context->ClearRenderTargetView(rtv, clearColor);
-	context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// 셰이더 로딩 (프로젝트 로드 이후)
+	if ((!m_pPickingVS || !m_pPickingPS || !m_pMaskPS || !m_pFullScreenVS || !m_pOutlinePS) &&
+		!ResourceManager::Get().GetCurrentRootPath().empty())
+	{
+		if (!m_pPickingVS)
+			m_pPickingVS = ResourceManager::Get().Load<VShader>(L"Shader/PBR/VS/SkeletalVertexShader.hlsl");
+		if (!m_pPickingPS)
+			m_pPickingPS = ResourceManager::Get().Load<PShader>(L"Shader/Editor/PickingPS.hlsl");
+		if (!m_pMaskPS)
+			m_pMaskPS = ResourceManager::Get().Load<PShader>(L"Shader/Editor/MaskPS.hlsl");
+		if (!m_pFullScreenVS)
+			m_pFullScreenVS = ResourceManager::Get().Load<VShader>(L"Shader/PP/FullScreenVS.hlsl");
+		if (!m_pOutlinePS)
+			m_pOutlinePS = ResourceManager::Get().Load<PShader>(L"Shader/Editor/OutlinePS.hlsl");
+	}
 
 	if (m_isFocused)
 		m_pCam->InputUpdate((int)m_guizmoOperation);
-
-	m_pGridRenderer->Render(context, *m_pCam);
 
 	auto view = m_pCam->GetViewMatrix();
 	auto proj = m_pCam->GetProjMatrix();
 
 	RenderManager::Get().SetViewMatrix(view);
 	RenderManager::Get().SetProjMatrix(proj);
+
+	// ID 텍스쳐 렌더링
+	if (m_pPickingVS && m_pPickingPS && m_pPickingIdBuffer)
+	{
+		context->OMSetRenderTargets(1, m_pIdRTV.GetAddressOf(), dsv);
+		float idClear[4] = { 0, 0, 0, 0 };
+		context->ClearRenderTargetView(m_pIdRTV.Get(), idClear);
+		context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		context->RSSetState(m_states->CullNone());
+
+		RenderManager::Get().RenderPickingIds(
+			m_pPickingVS->m_pVShader.Get(),
+			m_pPickingPS->m_pPShader.Get(),
+			m_pPickingVS->m_pInputLayout.Get(),
+			m_pPickingIdBuffer.Get());
+	}
+
+	// Scene 렌더링
+	context->OMSetDepthStencilState(nullptr, 0);
+	context->OMSetRenderTargets(1, &rtv, dsv);
+	float clearColor[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	context->ClearRenderTargetView(rtv, clearColor);
+	context->ClearDepthStencilView(dsv, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+	m_pGridRenderer->Render(context, *m_pCam);
+
 	RenderManager::Get().RenderOnlyRenderer();
 
 	// 디버그 드로잉
@@ -654,6 +877,98 @@ void MMMEngine::Editor::SceneViewWindow::RenderSceneToTexture(ID3D11DeviceContex
 			
 
 		m_batch->End();
+	}
+
+	// Stencil 기반 마스크 생성 (선택된 오브젝트, 깊이 무시)
+	if (g_selectedGameObject.IsValid() && !g_selectedGameObject->IsDestroyed()
+		&& m_pPickingVS && m_pMaskPS && m_pStencilWriteState && m_pStencilTestState)
+	{
+		std::vector<uint32_t> selectedIds;
+		auto renderers = g_selectedGameObject->GetComponents<Renderer>();
+		selectedIds.reserve(renderers.size());
+
+		for (auto& renderer : renderers)
+		{
+			if (!renderer.IsValid() || renderer->IsDestroyed())
+				continue;
+
+			uint32_t idx = renderer->GetRenderIndex();
+			if (idx != UINT32_MAX)
+				selectedIds.push_back(idx);
+		}
+
+		// 1) 스텐실 클리어
+		context->ClearDepthStencilView(dsv, D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+		// 2) 선택 오브젝트를 스텐실에 기록 (컬러 쓰기 없음)
+		context->OMSetRenderTargets(1, &rtv, dsv);
+		context->OMSetDepthStencilState(m_pStencilWriteState.Get(), 1);
+		context->OMSetBlendState(m_pNoColorWriteBS.Get(), nullptr, 0xFFFFFFFF);
+		context->RSSetState(m_states->CullNone());
+
+		if (!selectedIds.empty())
+		{
+			RenderManager::Get().RenderSelectedMask(
+				m_pPickingVS->m_pVShader.Get(),
+				m_pMaskPS->m_pPShader.Get(),
+				m_pPickingVS->m_pInputLayout.Get(),
+				selectedIds.data(),
+				static_cast<uint32_t>(selectedIds.size()));
+		}
+
+		// 3) 스텐실 -> 마스크 텍스쳐로 변환
+		context->OMSetRenderTargets(1, m_pMaskRTV.GetAddressOf(), dsv);
+		context->OMSetDepthStencilState(m_pStencilTestState.Get(), 1);
+		context->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+		context->ClearRenderTargetView(m_pMaskRTV.Get(), DirectX::Colors::Black);
+
+		context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		context->IASetInputLayout(nullptr);
+		context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+		context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
+		context->VSSetShader(m_pFullScreenVS->m_pVShader.Get(), nullptr, 0);
+		context->PSSetShader(m_pMaskPS->m_pPShader.Get(), nullptr, 0);
+
+		context->Draw(3, 0);
+
+		context->OMSetDepthStencilState(nullptr, 0);
+	}
+
+	// 아웃라인 렌더링 (씬 뷰 전용)
+	if (g_selectedGameObject.IsValid() && !g_selectedGameObject->IsDestroyed()
+		&& m_pOutlinePS && m_pFullScreenVS && m_pOutlineCBuffer && m_pMaskSRV)
+	{
+		if (m_width > 0 && m_height > 0)
+		{
+			OutlineConstants constants;
+			constants.color = { 1.0f, 0.5f, 0.0f, 1.0f };
+			constants.texelSize = { 1.0f / static_cast<float>(m_width), 1.0f / static_cast<float>(m_height) };
+			constants.thickness = 1.0f;
+			constants.threshold = 0.1f;
+
+			context->UpdateSubresource(m_pOutlineCBuffer.Get(), 0, nullptr, &constants, 0, 0);
+
+			context->OMSetRenderTargets(1, &rtv, dsv);
+			context->OMSetBlendState(m_pOutlineBlendState.Get(), nullptr, 0xffffffff);
+			context->OMSetDepthStencilState(m_states->DepthNone(), 0);
+			context->RSSetState(m_states->CullNone());
+
+			context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			context->IASetInputLayout(nullptr);
+			context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+			context->IASetIndexBuffer(nullptr, DXGI_FORMAT_R32_UINT, 0);
+			context->VSSetShader(m_pFullScreenVS->m_pVShader.Get(), nullptr, 0);
+			context->PSSetShader(m_pOutlinePS->m_pPShader.Get(), nullptr, 0);
+
+			ID3D11ShaderResourceView* maskSrv = m_pMaskSRV.Get();
+			context->PSSetShaderResources(0, 1, &maskSrv);
+			context->PSSetConstantBuffers(0, 1, m_pOutlineCBuffer.GetAddressOf());
+
+			context->Draw(3, 0);
+
+			ID3D11ShaderResourceView* nullSRV2 = nullptr;
+			context->PSSetShaderResources(0, 1, &nullSRV2);
+		}
 	}
 
 	// 여기서 함수 끝나면 guard 소멸자에서 원래 RT/Viewport/Blend 등 자동 복원됨

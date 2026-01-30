@@ -141,6 +141,8 @@ namespace MMMEngine
 		void BeginFrame();
 		void Render();
 		void RenderOnlyRenderer();
+		void RenderPickingIds(ID3D11VertexShader* vs, ID3D11PixelShader* ps, ID3D11InputLayout* layout, ID3D11Buffer* idBuffer);
+		void RenderSelectedMask(ID3D11VertexShader* vs, ID3D11PixelShader* ps, ID3D11InputLayout* layout, const uint32_t* ids, uint32_t count);
 		void EndFrame();
 
 		ObjPtr<Camera> GetCamera() { return m_pMainCamera; }
@@ -156,5 +158,7 @@ namespace MMMEngine
 
 		const Microsoft::WRL::ComPtr<ID3D11Device5> GetDevice() const { return m_pDevice; }
 		const Microsoft::WRL::ComPtr<ID3D11DeviceContext4> GetContext() const { return m_pDeviceContext; }
+
+		Renderer* GetRendererById(uint32_t id) const;
 	};
 }
