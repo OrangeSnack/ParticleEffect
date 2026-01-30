@@ -65,6 +65,8 @@ namespace MMMEngine
 		void Start();
 
 		void UpdateProperty(const std::wstring& _propName, const PropertyValue& _value, ShaderType _type);
+		
+		std::shared_ptr<Material> m_pFullScreenMat;
 	protected:
 		HWND m_hWnd;
 

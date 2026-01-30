@@ -94,6 +94,7 @@ void MMMEngine::ShaderInfo::StartUp()
 	// 쉐이더 타입정보정의
 	m_typeInfoMap[L"Shader/PBR/PS/BRDFShader.hlsl"] = { ShaderType::S_PBR, RenderType::R_GEOMETRY };
 	m_typeInfoMap[L"Shader/SkyBox/SkyBoxPixelShader.hlsl"] = { ShaderType::S_SKYBOX, RenderType::R_SKYBOX };
+	//m_typeInfoMap[L"Shader/SkyBox/SkyBoxPixelShader.hlsl"] = { ShaderType::S_PP, RenderType::R_NONE };
 
 	// 타입별 레지스터 번호 등록
 	m_propertyInfoMap[ShaderType::S_PBR][L"_albedo"] = { PropertyType::Texture, 0 };

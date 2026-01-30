@@ -31,6 +31,7 @@ namespace MMMEngine {
 		S_TOON = 1,
 		S_PHONG = 2,
 		S_SKYBOX = 3,
+		S_PP = 4,
 	};
 
 	// -- 상수 정보 만들고 스타트업, json에 같은양식으로 등록할것!! --

@@ -410,6 +410,11 @@ namespace MMMEngine {
 		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, m_pCambuffer.GetAddressOf()));
 		bd.ByteWidth = sizeof(Render_TransformBuffer);
 		HR_T(m_pDevice->CreateBuffer(&bd, nullptr, &m_pTransbuffer));
+
+		// 풀스크린 트라이앵글 메테리얼 만들기
+		m_pFullScreenMat = std::make_shared<Material>();
+		//m_pFullScreenMat->SetVShader(L"Shader/PP/FullScreenVS.hlsl");
+		//m_pFullScreenMat->SetPShader(L"Shader/PP/FullScreenPS.hlsl");
 	}
 	void RenderManager::ShutDown()
 	{
@@ -660,7 +665,7 @@ namespace MMMEngine {
 		Render_CamBuffer m_camMat = {};
 		m_camMat.mView = XMMatrixTranspose(m_pMainCamera->GetViewMatrix());
 		m_camMat.mProjection = XMMatrixTranspose(m_pMainCamera->GetProjMatrix());
-		m_camMat.camPos = XMMatrixInverse(nullptr, m_camMat.mView).r[3];
+		m_camMat.camPos = XMMatrixInverse(nullptr, m_pMainCamera->GetViewMatrix()).r[3];
 
 		// 리소스 업데이트
 		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);
@@ -685,6 +690,9 @@ namespace MMMEngine {
 		m_pDeviceContext->OMSetRenderTargets(1, reinterpret_cast<ID3D11RenderTargetView* const*>(m_pRenderTargetView.GetAddressOf()), nullptr);
 
 		// TODO::백버퍼에다 씬 즉시 드로우 (풀스크린 트라이앵글)
+		if (useBackBuffer) {
+
+		}
 	}
 
 	void RenderManager::RenderOnlyRenderer()
