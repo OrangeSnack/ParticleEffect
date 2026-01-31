@@ -178,6 +178,18 @@ void MMMEngine::Editor::SceneViewWindow::Initialize(ID3D11Device* device, ID3D11
 
 void MMMEngine::Editor::SceneViewWindow::Render()
 {
+	if (ImGui::IsKeyPressed(ImGuiKey_F))
+	{
+		if (g_selectedGameObject.IsValid())
+		{
+			auto& tr = g_selectedGameObject->GetTransform();
+			// 오브젝트의 위치로 포커스 (거리는 5.0f로 설정하거나 바운딩 박스 크기에 비례하게 설정)
+			const float focusDistance = 7.0f;
+			m_pCam->FocusOn(tr->GetWorldPosition(), focusDistance);
+			m_viewGizmoDistance = focusDistance;
+		}
+	}
+
 	if (!g_editor_window_sceneView)
 		return;
 
@@ -227,18 +239,6 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 
 			if (ImGui::IsKeyPressed(ImGuiKey_R))
 				m_guizmoOperation = ImGuizmo::SCALE;
-		}
-
-		if (ImGui::IsKeyPressed(ImGuiKey_F))
-		{
-			if (g_selectedGameObject.IsValid())
-			{
-				auto& tr = g_selectedGameObject->GetTransform();
-				// 오브젝트의 위치로 포커스 (거리는 5.0f로 설정하거나 바운딩 박스 크기에 비례하게 설정)
-				const float focusDistance = 7.0f;
-				m_pCam->FocusOn(tr->GetWorldPosition(), focusDistance);
-				m_viewGizmoDistance = focusDistance;
-			}
 		}
 	}
 
@@ -483,8 +483,9 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 	bool viewGizmoUsing = false;
 	if (imageSize.x > 0.0f && imageSize.y > 0.0f)
 	{
-		const float gizmoSize = 64.0f;
-		const float gizmoPadding = 8.0f;
+		const float gizmoScale = 1.0f;
+		const float gizmoSize = 64.0f * gizmoScale;
+		const float gizmoPadding = 10.0f * gizmoScale;
 		const float axisLength = gizmoSize * 0.35f;
 		const float circleRadius = gizmoSize * 0.12f;
 		const float centerRadius = gizmoSize * 0.08f;
@@ -574,9 +575,21 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 			}
 		}
 
+		const float axisFadeRange = 0.2f;
+		const float backAxisAlpha = 0.425f;
+		auto calcAxisFade = [&](float depth)
+		{
+			const float start = -axisFadeRange;
+			const float end = axisFadeRange;
+			float t = (depth - start) / (end - start);
+			t = std::clamp(t, 0.0f, 1.0f);
+			t = t * t * (3.0f - 2.0f * t);
+			return backAxisAlpha + (1.0f - backAxisAlpha) * t;
+		};
+
 		auto drawAxisLine = [&](const AxisWidget& axis)
 		{
-			float alpha = axis.depth >= 0.0f ? 1.0f : 0.55f;
+			float alpha = calcAxisFade(axis.depth);
 			float lineAlpha = axis.filled ? 200.0f : 120.0f;
 			ImU32 lineColor = IM_COL32(
 				(int)(ImGui::ColorConvertU32ToFloat4(axis.color).x * 255.0f),
@@ -596,7 +609,7 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 
 		auto drawAxisCircleAndLabel = [&](const AxisWidget& axis)
 		{
-			float alpha = axis.depth >= 0.0f ? 1.0f : 0.55f;
+			float alpha = calcAxisFade(axis.depth);
 			ImU32 circleColor = IM_COL32(
 				(int)(ImGui::ColorConvertU32ToFloat4(axis.color).x * 255.0f),
 				(int)(ImGui::ColorConvertU32ToFloat4(axis.color).y * 255.0f),
@@ -608,14 +621,14 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 			}
 			else
 			{
-				drawList->AddCircle(axis.endPos, circleRadius, circleColor, 0, 2.0f);
+				drawList->AddCircle(axis.endPos, circleRadius * 0.95f, circleColor, 0, 2.0f);
 			}
 
 			if (axis.label && axis.label[0] != '\0')
 			{
 				ImVec2 textSize = ImGui::CalcTextSize(axis.label);
 				drawList->AddText(ImVec2(axis.endPos.x - textSize.x * 0.5f, axis.endPos.y - textSize.y * 0.5f),
-					IM_COL32(10, 10, 10, 220), axis.label);
+					IM_COL32(10, 10, 10, (int)(alpha * 220.0f)), axis.label);
 			}
 		};
 
@@ -639,7 +652,7 @@ void MMMEngine::Editor::SceneViewWindow::Render()
 		}
 
 		// center toggle (rounded rect) drawn after back axes so it stays visible
-		drawList->AddRectFilled(centerMin, centerMax, IM_COL32(245, 245, 245, 240), 2.5f);
+		drawList->AddRectFilled(centerMin, centerMax, IM_COL32(245, 245, 245, 240), 2.5f * gizmoScale);
 
 		// Front axes circles/labels above center toggle
 		for (int i = 0; i < axisCount; ++i)
@@ -951,6 +964,7 @@ void MMMEngine::Editor::SceneViewWindow::RenderSceneToTexture(ID3D11DeviceContex
 	m_pCam->UpdateProjectionBlend();
 	if (m_isFocused && !m_blockCameraInput)
 		m_pCam->InputUpdate((int)m_guizmoOperation);
+	m_pCam->UpdateState();
 
 	auto view = m_pCam->GetViewMatrix();
 	auto proj = m_pCam->GetProjMatrix();
