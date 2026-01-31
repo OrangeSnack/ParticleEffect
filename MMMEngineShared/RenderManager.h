@@ -48,6 +48,8 @@ namespace MMMEngine
 		std::queue<Renderer*> m_renInitQueue;
 		unsigned int m_rObjIdx = 0;
 		uint32_t m_nextRendererId = 1;
+
+		bool isOrtho = false;
 		
 		// 라이트 저장
 		std::vector<Light*> m_lights;
@@ -140,6 +142,7 @@ namespace MMMEngine
 		void SetWorldMatrix(DirectX::SimpleMath::Matrix& _world);
 		void SetViewMatrix(DirectX::SimpleMath::Matrix& _view);
 		void SetProjMatrix(DirectX::SimpleMath::Matrix& _proj);
+		void SetOrtho(bool _val) { isOrtho = _val; }
 
 		void ResizeSwapChainSize(int width, int height);
 		void ResizeSceneSize(int _sceneWidth, int _sceneHeight);

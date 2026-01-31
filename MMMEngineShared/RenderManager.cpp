@@ -139,7 +139,11 @@ namespace MMMEngine {
 				m_pDeviceContext->UpdateSubresource1(m_pTransbuffer.Get(), 0, nullptr, &transformBuffer, 0, 0, D3D11_COPY_DISCARD);
 				m_pDeviceContext->VSSetConstantBuffers(1, 1, m_pTransbuffer.GetAddressOf());
 
-				m_pDeviceContext->DrawIndexed(cmd.indiciesSize, 0, 0);
+
+				if (type == RenderType::R_SKYBOX)
+					m_pDeviceContext->Draw(3, 0);
+				else
+					m_pDeviceContext->DrawIndexed(cmd.indiciesSize, 0, 0);
 			}
 		}
 	}
@@ -819,12 +823,14 @@ namespace MMMEngine {
 
 		// 캠 버퍼 업데이트
 		Render_CamBuffer m_camMat = {};
-		/*m_camMat.mView = XMMatrixTranspose(m_pMainCamera->GetViewMatrix());
+		m_camMat.mView = XMMatrixTranspose(m_pMainCamera->GetViewMatrix());
 		m_camMat.mProjection = XMMatrixTranspose(m_pMainCamera->GetProjMatrix());
-		m_camMat.camPos = XMMatrixInverse(nullptr, m_pMainCamera->GetViewMatrix()).r[3];*/
-		m_camMat.mView = m_lightView;
-		m_camMat.mProjection = m_lightProj;
-		m_camMat.camPos = { m_lightPos.x, m_lightPos.y, m_lightPos.z , 1.0f };
+		m_camMat.camPos = XMMatrixInverse(nullptr, m_pMainCamera->GetViewMatrix()).r[3];
+		m_camMat.mInvProjection = XMMatrixTranspose(m_pMainCamera->GetProjMatrix().Invert());
+
+		//m_camMat.mView = m_lightView;
+		//m_camMat.mProjection = m_lightProj;
+		//m_camMat.camPos = { m_lightPos.x, m_lightPos.y, m_lightPos.z , 1.0f };
 
 		// 리소스 업데이트
 		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);
@@ -910,6 +916,7 @@ namespace MMMEngine {
 		m_camMat.camPos = XMMatrixInverse(nullptr, m_viewMatrix).r[3];
 		m_camMat.mView = XMMatrixTranspose(m_viewMatrix);
 		m_camMat.mProjection = XMMatrixTranspose(m_projMatrix);
+		m_camMat.mInvProjection = XMMatrixTranspose(m_projMatrix.Invert());
 
 		// 리소스 업데이트
 		m_pDeviceContext->UpdateSubresource1(m_pCambuffer.Get(), 0, nullptr, &m_camMat, 0, 0, D3D11_COPY_DISCARD);

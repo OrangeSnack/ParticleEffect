@@ -96,6 +96,14 @@ void MMMEngine::ShaderInfo::StartUp()
 	m_typeInfoMap[L"Shader/SkyBox/SkyBoxPixelShader.hlsl"] = { ShaderType::S_SKYBOX, RenderType::R_SKYBOX };
 	//m_typeInfoMap[L"Shader/SkyBox/SkyBoxPixelShader.hlsl"] = { ShaderType::S_PP, RenderType::R_NONE };
 
+	// 구조체별 이름 등록 (쉐이더 이름과같게)
+	m_CBBufferMap[L"MatBuffer"] = CreateConstantBuffer<PBR_MaterialBuffer>();
+	m_CBBufferMap[L"LightBuffer"] = CreateConstantBuffer<Render_LightBuffer>();
+
+	// 사용 상수버퍼 등록
+	m_typeBufferMap[ShaderType::S_PBR].push_back({ L"MatBuffer" , 3 });
+	m_typeBufferMap[ShaderType::S_PBR].push_back({ L"LightBuffer" , 1 });
+
 	// 타입별 레지스터 번호 등록
 	m_propertyInfoMap[ShaderType::S_PBR][L"_albedo"] = { PropertyType::Texture, 0 };
 	m_propertyInfoMap[ShaderType::S_PBR][L"_normal"] = { PropertyType::Texture, 1 };
@@ -123,13 +131,6 @@ void MMMEngine::ShaderInfo::StartUp()
 	m_propertyInfoMap[ShaderType::S_SKYBOX][L"_cubemap"]	= { PropertyType::Texture, 0 };
 	//m_propertyInfoMap[ShaderType::S_SKYBOX][L"_sp0"]		= { PropertyType::Sampler, 0 };
 
-	// 구조체별 이름 등록 (쉐이더 이름과같게)
-	m_CBBufferMap[L"MatBuffer"] = CreateConstantBuffer<PBR_MaterialBuffer>();
-	m_CBBufferMap[L"LightBuffer"] = CreateConstantBuffer<Render_LightBuffer>();
-
-	// 사용 상수버퍼 등록
-	m_typeBufferMap[ShaderType::S_PBR].push_back({ L"MatBuffer" , 3 });
-	m_typeBufferMap[ShaderType::S_PBR].push_back({ L"LightBuffer" , 1 });
 
 	// 쉐이더 리플렉션 등록 (상수버퍼 개별업데이트 사용하기 위함) (!! 순서중요)
 	CreatePShaderReflection(L"Shader/PBR/PS/BRDFShader.hlsl");
